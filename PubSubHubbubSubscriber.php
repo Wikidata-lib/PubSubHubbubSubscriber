@@ -28,6 +28,8 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 
 global $wgExtensionCredits;
 global $wgExtensionMessagesFiles, $wgMessagesDirs;
+global $wgAutoloadClasses;
+global $wgAPIModules;
 
 $wgExtensionCredits['other'][] = array(
 	'path' => __FILE__,
@@ -42,3 +44,7 @@ $dir = __DIR__ . '/';
 
 $wgMessagesDirs['PubSubHubbub'] = $dir . 'i18n';
 $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscriber.i18n.php';
+
+$wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionCallback'] = $dir . 'src/SubscriptionCallback.php';
+
+$wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\SubscriptionCallback';
