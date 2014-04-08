@@ -1,0 +1,8 @@
+{
+    "@metadata": {
+        "authors": [
+            "BP2013N2"
+        ]
+    },
+    "pubsubhubbubsubscriber-desc": "Allows subscribing to PubSubHubbub-enabled MediaWiki instances"
+}
