@@ -30,6 +30,7 @@ global $wgExtensionCredits;
 global $wgExtensionMessagesFiles, $wgMessagesDirs;
 global $wgAutoloadClasses;
 global $wgAPIModules;
+global $wgHooks;
 
 $wgExtensionCredits['other'][] = array(
 	'path' => __FILE__,
@@ -46,5 +47,8 @@ $wgMessagesDirs['PubSubHubbub'] = $dir . 'i18n';
 $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscriber.i18n.php';
 
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionCallback'] = $dir . 'src/SubscriptionCallback.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\HookHandler'] = $dir . 'src/HookHandler.php';
 
 $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\SubscriptionCallback';
+
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
