@@ -13,7 +13,7 @@ class Subscription {
 		$this->mId = $id;
 		$this->mTopic = $topic;
 		$this->mExpires = $expires;
-		$this->mConfirmed = !!$confirmed;
+		$this->mConfirmed = (bool) $confirmed;
 	}
 
 	/**
@@ -36,8 +36,21 @@ class Subscription {
 		return new Subscription( $data->psb_id, $topicURL, $data->psb_expires, $data->psb_confirmed );
 	}
 
+	public function update() {
+		$dbw = wfGetDB( DB_MASTER );
+		if ( $this->mId ) {
+			$dbw->update( 'push_subscriptions',
+				array( 'psb_expires' => $this->mExpires, 'psb_confirmed' => $this->mConfirmed ),
+				array( 'psb_id' => $this->mId ) );
+		}
+	}
+
 	public function isConfirmed() {
 		return $this->mConfirmed;
+	}
+
+	public function setConfirmed( $confirmed ) {
+		$this->mConfirmed = (bool) $confirmed;
 	}
 
 }

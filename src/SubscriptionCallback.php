@@ -6,6 +6,7 @@ use ApiBase;
 use ApiFormatJson;
 use ApiFormatRaw;
 use ApiMain;
+use MWException;
 
 class SubscriptionCallback extends ApiBase {
 
@@ -17,37 +18,30 @@ class SubscriptionCallback extends ApiBase {
 		$params = $this->extractRequestParams();
 		$result = $this->getResult();
 
-		$result->addValue( null, 'mime', "text/plain" );
-		if ( $this->isSubscriptionValid( $params['hub.mode'], $params['hub.topic'] ) ) {
-			$result->addValue( null, 'text', $params['hub.challenge'] );
-		} else {
-			header( "Not Found", true, 404 );
-			$result->addValue( null, 'text', "" );
-		}
-	}
-
-	/**
-	 * Check whether the subscribe/unsubscribe action is legitimate.
-	 *
-	 * @param string $hubMode Either "<code>subscribe</code>" or "<code>unsubscribe</code>".
-	 * @param string $topic The URL of the PubSubHubbub resource.
-	 * @return bool whether the action requested is legitimate and should be confirmed.
-	 */
-	private function isSubscriptionValid( $hubMode, $topic ) {
-		$subscription = Subscription::findByTopic( $topic );
-		if ( !$subscription ) {
-			return false;
-		}
-
-		switch ( $hubMode ) {
+		switch ( $params['hub.mode'] ) {
+			case 'push':
+				if ( !$this->getRequest()->wasPosted() ) {
+					throw new MWException("Illegal PuSH request.");
+				}
+				// The hub is POSTing new data.
+				// TODO: Handle that.
+				break;
 			case 'subscribe':
-				return !$subscription->isConfirmed();
+				$subscription = Subscription::findByTopic( $params['hub.topic'] );
+
+				$result->addValue( null, 'mime', "text/plain" );
+				if ( $subscription && !$subscription->isConfirmed() ) {
+					$result->addValue( null, 'text', $params['hub.challenge'] );
+					$subscription->setConfirmed(true);
+					$subscription->update();
+				} else {
+					header( "Not Found", true, 404 );
+					$result->addValue( null, 'text', "" );
+				}
+				break;
 			case 'unsubscribe':
-				// TODO: Check whether unsubscription is intended.
-				return false;
-			default:
-				// This should never happen.
-				return false;
+				// TODO: Handle unsubscribe events.
+				break;
 		}
 	}
 
@@ -58,7 +52,7 @@ class SubscriptionCallback extends ApiBase {
 	public function getAllowedParams() {
 		return array(
 			'hub.mode' => array(
-				ApiBase::PARAM_TYPE => array( 'subscribe', 'unsubscribe' ),
+				ApiBase::PARAM_TYPE => array( 'push', 'subscribe', 'unsubscribe' ),
 				ApiBase::PARAM_REQUIRED => true,
 			),
 			'hub.topic' => array(
@@ -67,7 +61,6 @@ class SubscriptionCallback extends ApiBase {
 			),
 			'hub.challenge' => array(
 				ApiBase::PARAM_TYPE => 'string',
-				ApiBase::PARAM_REQUIRED => true,
 			),
 			'hub.lease_seconds' => array(
 				ApiBase::PARAM_TYPE => 'integer',
@@ -77,7 +70,7 @@ class SubscriptionCallback extends ApiBase {
 
 	public function getParamDescription() {
 		return array_merge( parent::getParamDescription(), array(
-			'hub.mode' => 'The literal string "subscribe" or "unsubscribe", which matches the original request to th '
+			'hub.mode' => 'The literal string "subscribe" or "unsubscribe", which matches the original request to the '
 				. 'hub from the subscriber.',
 			'hub.topic' => 'The topic URL given in the corresponding subscription request.',
 			'hub.challenge' => 'A hub-generated, random string that MUST be echoed by the subscriber to verify the '
