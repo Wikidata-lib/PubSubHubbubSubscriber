@@ -35,8 +35,21 @@ class SubscriptionCallback extends ApiBase {
 	 * @return bool whether the action requested is legitimate and should be confirmed.
 	 */
 	private function isSubscriptionValid( $hubMode, $topic ) {
-		// TODO: Add actual condition here.
-		return true;
+		$subscription = Subscription::findByTopic( $topic );
+		if ( !$subscription ) {
+			return false;
+		}
+
+		switch ( $hubMode ) {
+			case 'subscribe':
+				return !$subscription->isConfirmed();
+			case 'unsubscribe':
+				// TODO: Check whether unsubscription is intended.
+				return false;
+			default:
+				// This should never happen.
+				return false;
+		}
 	}
 
 	public function getAllowedParams() {
