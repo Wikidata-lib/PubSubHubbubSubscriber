@@ -19,13 +19,24 @@ class SubscriptionCallback extends ApiBase {
 		$result = $this->getResult();
 
 		$result->addValue( null, 'mime', "text/plain" );
-		// TODO: Add actual condition here.
-		if (true) {
+		if ( $this->isSubscriptionValid( $params['hub.mode'], $params['hub.topic'] ) ) {
 			$result->addValue( null, 'text', $params['hub.challenge'] );
 		} else {
 			header( "Not Found", true, 404 );
 			$result->addValue( null, 'text', "" );
 		}
+	}
+
+	/**
+	 * Check whether the subscribe/unsubscribe action is legitimate.
+	 *
+	 * @param string $hubMode Either "<code>subscribe</code>" or "<code>unsubscribe</code>".
+	 * @param string $topic The URL of the PubSubHubbub resource.
+	 * @return bool whether the action requested is legitimate and should be confirmed.
+	 */
+	private function isSubscriptionValid( $hubMode, $topic ) {
+		// TODO: Add actual condition here.
+		return true;
 	}
 
 	public function getAllowedParams() {
@@ -63,9 +74,7 @@ class SubscriptionCallback extends ApiBase {
 	}
 
 	public function getDescription() {
-		return array(
-			'API module to handle requests from the PubSubHubbub hub.'
-		);
+		return "API module to handle requests from the PubSubHubbub hub.";
 	}
 
 }
