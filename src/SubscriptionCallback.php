@@ -3,15 +3,14 @@
 namespace PubSubHubbubSubscriber;
 
 use ApiBase;
+use ApiFormatJson;
+use ApiFormatRaw;
 use ApiMain;
 
 class SubscriptionCallback extends ApiBase {
 
 	public function __construct( ApiMain $main, $name, $prefix = '' ) {
 		parent::__construct( $main, $name, $prefix );
-
-		#$manager = $this->getMain()->getModuleManager();
-		#$manager->addModule( 'raw', 'format', 'ApiFormatRaw' );
 	}
 
 	public function execute() {
@@ -50,6 +49,10 @@ class SubscriptionCallback extends ApiBase {
 				// This should never happen.
 				return false;
 		}
+	}
+
+	public function getCustomPrinter() {
+		return new ApiFormatRaw( $this->getMain(), new ApiFormatJson( $this->getMain(), 'json' ) );
 	}
 
 	public function getAllowedParams() {
