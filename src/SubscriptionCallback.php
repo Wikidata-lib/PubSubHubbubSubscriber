@@ -16,7 +16,6 @@ class SubscriptionCallback extends ApiBase {
 
 	public function execute() {
 		$params = $this->extractRequestParams();
-		$result = $this->getResult();
 
 		switch ( $params['hub.mode'] ) {
 			case 'push':
@@ -29,20 +28,38 @@ class SubscriptionCallback extends ApiBase {
 			case 'subscribe':
 				$subscription = Subscription::findByTopic( $params['hub.topic'] );
 
-				$result->addValue( null, 'mime', "text/plain" );
 				if ( $subscription && !$subscription->isConfirmed() ) {
-					$result->addValue( null, 'text', $params['hub.challenge'] );
 					$subscription->setConfirmed(true);
 					$subscription->update();
+					$this->acceptSubscriptionChange( $params['hub.challenge'] );
 				} else {
-					header( "Not Found", true, 404 );
-					$result->addValue( null, 'text', "" );
+					$this->declineSubscriptionChange();
 				}
 				break;
 			case 'unsubscribe':
-				// TODO: Handle unsubscribe events.
+				$subscription = Subscription::findByTopic( $params['hub.topic'] );
+
+				if ( $subscription && $subscription->isUnsubscribed() ) {
+					$subscription->delete();
+					$this->acceptSubscriptionChange( $params['hub.challenge'] );
+				} else {
+					$this->declineSubscriptionChange();
+				}
 				break;
 		}
+	}
+
+	private function acceptSubscriptionChange( $challenge ) {
+		$result = $this->getResult();
+		$result->addValue( null, 'mime', "text/plain" );
+		$result->addValue( null, 'text', $challenge );
+	}
+
+	private function declineSubscriptionChange() {
+		header( "Not Found", true, 404 );
+		$result = $this->getResult();
+		$result->addValue( null, 'mime', "text/plain" );
+		$result->addValue( null, 'text', "" );
 	}
 
 	public function getCustomPrinter() {
