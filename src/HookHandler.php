@@ -6,6 +6,11 @@ use DatabaseUpdater;
 
 class HookHandler {
 
+	/**
+	 * @codeCoverageIgnore
+	 * @param DatabaseUpdater $updater
+	 * @return bool
+	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
 		$sqlPath = __DIR__ . "/../sql/";
 		$updater->addExtensionTable( 'push_subscriptions',
@@ -21,6 +26,7 @@ class HookHandler {
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/UnitTestsList
 	 *
+	 * @codeCoverageIgnore
 	 * @param string[] $files The list of test files.
 	 * @return bool
 	 */
