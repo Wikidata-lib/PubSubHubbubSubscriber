@@ -4,6 +4,7 @@ namespace PubSubHubbubSubscriber;
 
 use Language;
 use MediaWikiLangTestCase;
+use ReflectionClass;
 
 /**
  * @covers PubSubHubbubSubscriber\Subscription
@@ -36,8 +37,8 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 	 * @param mixed[] $expectedData
 	 */
 	public function testSubscriptionInsert( $objectData, $expectedData ) {
-		$subscription = new Subscription( $objectData[0], $objectData[1], $objectData[2], $objectData[3],
-			$objectData[4] );
+		$reflection = new ReflectionClass( 'PubSubHubbubSubscriber\\Subscription' );
+		$subscription = $reflection->newInstanceArgs( $objectData );
 		$subscription->update();
 		$this->assertSelect( 'push_subscriptions',
 			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ), '',
