@@ -91,18 +91,42 @@ class Subscription {
 		}
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @return string
+	 */
+	public function getTopic() {
+		return $this->mTopic;
+	}
+
+	/**
+	 * @codeCoverageIgnore
+	 * @return bool whether this Subscription is already confirmed.
+	 */
 	public function isConfirmed() {
 		return $this->mConfirmed;
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @param bool $confirmed
+	 */
 	public function setConfirmed( $confirmed ) {
 		$this->mConfirmed = (bool) $confirmed;
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @return bool
+	 */
 	public function isUnsubscribed() {
 		return $this->mUnsubscribe;
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @param bool $unsubscribe
+	 */
 	public function setUnsubscribed( $unsubscribe ) {
 		$this->mUnsubscribe = (bool) $unsubscribe;
 	}

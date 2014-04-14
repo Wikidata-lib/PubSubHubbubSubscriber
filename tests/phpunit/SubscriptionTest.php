@@ -59,6 +59,31 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 	}
 
 	/**
+	 * @depends testSubscriptionUpdate
+	 */
+	public function testSubscriptionFindNothingByID() {
+		$subscription = Subscription::findByID( 100 );
+		$this->assertNull( $subscription );
+	}
+
+	/**
+	 * @depends testSubscriptionUpdate
+	 */
+	public function testSubscriptionFindNothingByTopic() {
+		$subscription = Subscription::findByTopic( "topic5" );
+		$this->assertNull( $subscription );
+	}
+
+	/**
+	 * @depends testSubscriptionUpdate
+	 */
+	public function testSubscriptionFindByTopic() {
+		$subscription = Subscription::findByTopic( "topic2" );
+		$this->assertNotNull( $subscription );
+		$this->assertEquals( "topic2", $subscription->getTopic() );
+	}
+
+	/**
 	 * @dataProvider getDeletedSubscriptionData
 	 * @depends testSubscriptionUpdate
 	 */
