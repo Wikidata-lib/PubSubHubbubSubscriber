@@ -18,6 +18,26 @@ class Subscription {
 		$this->mUnsubscribe = (bool) $unsubscribe;
 	}
 
+	public static function findByID( $id ) {
+		$dbr = wfGetDB( DB_SLAVE );
+		$result = $dbr->select( 'push_subscriptions',
+			array( 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id' => $id ) );
+
+		if ( $result->numRows() == 0 ) {
+			return NULL;
+		}
+
+		$data = $result->fetchObject();
+		return new Subscription(
+			$id,
+			$data->psb_topic,
+			$data->psb_expires,
+			$data->psb_confirmed,
+			$data->psb_unsubscribe
+		);
+	}
+
 	/**
 	 * Find a subscription by its topic URL.
 	 *
@@ -54,6 +74,13 @@ class Subscription {
 					'psb_unsubscribe' => $this->mUnsubscribe,
 				),
 				array( 'psb_id' => $this->mId ) );
+		} else {
+			$dbw->insert( 'push_subscriptions', array(
+				'psb_topic' => $this->mTopic,
+				'psb_expires' => $this->mExpires,
+				'psb_confirmed' => $this->mConfirmed,
+				'psb_unsubscribe' => $this->mUnsubscribe,
+			) );
 		}
 	}
 

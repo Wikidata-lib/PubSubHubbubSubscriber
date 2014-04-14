@@ -53,3 +53,4 @@ $wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscri
 $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\SubscriptionCallback';
 
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
+$wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
