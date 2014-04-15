@@ -6,7 +6,9 @@ use ApiBase;
 use ApiFormatJson;
 use ApiFormatRaw;
 use ApiMain;
+use ImportStreamSource;
 use MWException;
+use WikiImporter;
 
 class SubscriptionCallback extends ApiBase {
 
@@ -22,8 +24,16 @@ class SubscriptionCallback extends ApiBase {
 				if ( !$this->getRequest()->wasPosted() ) {
 					throw new MWException("Illegal PuSH request.");
 				}
+
 				// The hub is POSTing new data.
-				// TODO: Handle that.
+				$source = ImportStreamSource::newFromFile( "php://input" );
+				if ( $source->isGood() ) {
+					$importer = new WikiImporter( $source->value );
+					$importer->doImport();
+					$this->acceptSubscriptionChange( "" );
+				} else {
+					$this->declineSubscriptionChange();
+				}
 				break;
 			case 'subscribe':
 				$subscription = Subscription::findByTopic( $params['hub.topic'] );
