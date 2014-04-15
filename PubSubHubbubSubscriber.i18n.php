@@ -10,6 +10,7 @@
  *
  * This shim maintains compatibility back to MediaWiki 1.17.
  */
+// @codeCoverageIgnoreStart
 $messages = array();
 $GLOBALS['wgHooks']['LocalisationCacheRecache'][] = function ( $cache, $code, &$cachedData ) {
 	$codeSequence = array_merge( array( $code ), $cachedData['fallbackSequence'] );
@@ -29,3 +30,4 @@ $GLOBALS['wgHooks']['LocalisationCacheRecache'][] = function ( $cache, $code, &$
 	}
 	return true;
 };
+// @codeCoverageIgnoreEnd
