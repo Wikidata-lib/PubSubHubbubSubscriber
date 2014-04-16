@@ -46,10 +46,10 @@ class SubscriberClient {
 	 * @param string[] $rawLinkHeaders An indexed array of raw HTTP Link headers as returned by findRawLinkHeaders.
 	 * @return string[] an associative array with the link rel as key and the URL as value.
 	 */
-	private static function parseLinkHeaders( $rawLinkHeaders ) {
+	public static function parseLinkHeaders( $rawLinkHeaders ) {
 		$linkHeaders = array();
 		foreach ( $rawLinkHeaders as $rawLinkHeader ) {
-			$count = preg_match_all( "/<(?<url>[^>]+)>;\\s*rel=\"(?<rel>hub|self)\"/", $rawLinkHeader, $matches );
+			$count = preg_match_all( "/<(?<url>[^>]+)>;\\s*rel=\"(?<rel>[^\"]+)\"/", $rawLinkHeader, $matches );
 			for ( $i = 0; $i < $count; $i++ ) {
 				$linkHeaders[ $matches['rel'][$i] ] = $matches['url'][$i];
 			}
