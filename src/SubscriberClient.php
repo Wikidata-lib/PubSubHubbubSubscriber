@@ -53,6 +53,7 @@ class SubscriberClient {
 			'postData' => array(
 				'hub.callback' => $callbackURL,
 				'hub.mode' => 'subscribe',
+				'hub.verify' => 'async',
 				'hub.topic' => $resourceURL,
 				#'hub.secret' => "", // TODO
 			)
