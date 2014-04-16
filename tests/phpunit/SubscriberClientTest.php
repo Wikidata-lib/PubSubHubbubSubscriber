@@ -20,6 +20,9 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->setMwGlobals( array(
 			'wgContLang' => Language::factory( 'en' ),
 			'wgLanguageCode' => 'en',
+			'wgServer' => "http://this.is.a.test.wiki",
+			'wgScriptPath' => "/w",
+			'wgScriptExtension' => ".php",
 		) );
 	}
 
@@ -31,6 +34,15 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	public function testParseLinkHeaders( $rawLinkHeaders, $expectedParsedLinkHeaders ) {
 		$parsedLinkHeaders = SubscriberClient::parseLinkHeaders( $rawLinkHeaders );
 		$this->assertArrayEquals( $expectedParsedLinkHeaders, $parsedLinkHeaders, false, true );
+	}
+
+	/**
+	 * @dataProvider getCallbackData
+	 * @param string $resourceURL
+	 * @param string $callbackURL
+	 */
+	public function testCreateCallbackURL( $resourceURL, $callbackURL ) {
+		$this->assertEquals( $callbackURL, SubscriberClient::createCallbackURL( $resourceURL ));
 	}
 
 	public function getLinkHeaders() {
@@ -62,7 +74,20 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 					'wiki' => "http://test.wikipedia.org/",
 					'apple' => "http://eden/"
 				)
-			)
+			),
+		);
+	}
+
+	public function getCallbackData() {
+		return array(
+			array(
+				'http://resource/',
+				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F'
+			),
+			array(
+				'http://another.resource/',
+				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
+			),
 		);
 	}
 

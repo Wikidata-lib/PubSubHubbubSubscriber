@@ -58,12 +58,7 @@ class SubscriberClient {
 	}
 
 	private static function sendSubscriptionRequest( $hubURL, $resourceURL ) {
-		$apiURL = wfExpandURL( wfScript( 'api' ) );
-		$callbackURL = wfAppendQuery( $apiURL, array(
-			'action' => 'pushcallback',
-			'hub.mode' => 'push',
-			'hub.topic' => $resourceURL,
-		) );
+		$callbackURL = self::createCallbackURL( $resourceURL );
 
 		Http::post( $hubURL, array(
 			'postData' => array(
@@ -75,6 +70,15 @@ class SubscriberClient {
 			)
 		) );
 		// TODO: Check for errors.
+	}
+
+	public static function createCallbackURL( $resourceURL ) {
+		$apiURL = wfExpandURL( wfScript( 'api' ) );
+		return wfAppendQuery( $apiURL, array(
+			'action' => 'pushcallback',
+			'hub.mode' => 'push',
+			'hub.topic' => $resourceURL,
+		) );
 	}
 
 }
