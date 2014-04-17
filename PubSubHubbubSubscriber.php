@@ -37,6 +37,7 @@ $wgExtensionCredits['other'][] = array(
 	'name' => 'PubSubHubbubSubscriber',
 	'author' => array( 'BP2013N2' ),
 	'url' => 'https://www.mediawiki.org/wiki/Extension:PubSubHubbubSubscriber',
+	'license-name' => 'GPLv2',
 	'descriptionmsg' => 'pubsubhubbubsubscriber-desc',
 	'version'  => 0.1,
 );
