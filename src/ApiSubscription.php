@@ -10,7 +10,7 @@ use ImportStreamSource;
 use MWException;
 use WikiImporter;
 
-class SubscriptionCallback extends ApiBase {
+class ApiSubscription extends ApiBase {
 
 	public function __construct( ApiMain $main, $name, $prefix = '' ) {
 		parent::__construct( $main, $name, $prefix );

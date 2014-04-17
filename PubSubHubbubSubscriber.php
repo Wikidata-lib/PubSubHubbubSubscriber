@@ -47,12 +47,12 @@ $dir = __DIR__ . '/';
 $wgMessagesDirs['PubSubHubbubSubscriber'] = $dir . 'i18n';
 $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscriber.i18n.php';
 
-$wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionCallback'] = $dir . 'src/SubscriptionCallback.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\ApiSubscription'] = $dir . 'src/ApiSubscription.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\HookHandler'] = $dir . 'src/HookHandler.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscription.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriberClient'] = $dir . 'src/SubscriberClient.php';
 
-$wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\SubscriptionCallback';
+$wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
 
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
 $wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
