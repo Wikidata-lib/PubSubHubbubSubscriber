@@ -44,7 +44,7 @@ $wgExtensionCredits['other'][] = array(
 
 $dir = __DIR__ . '/';
 
-$wgMessagesDirs['PubSubHubbub'] = $dir . 'i18n';
+$wgMessagesDirs['PubSubHubbubSubscriber'] = $dir . 'i18n';
 $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscriber.i18n.php';
 
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionCallback'] = $dir . 'src/SubscriptionCallback.php';
