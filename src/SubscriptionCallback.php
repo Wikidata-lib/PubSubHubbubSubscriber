@@ -66,7 +66,7 @@ class SubscriptionCallback extends ApiBase {
 	}
 
 	private function declineSubscriptionChange() {
-		header( "Not Found", true, 404 );
+		header( "HTTP/1.1 404 Not Found", true, 404 );
 		$result = $this->getResult();
 		$result->addValue( null, 'mime', "text/plain" );
 		$result->addValue( null, 'text', "" );
