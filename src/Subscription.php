@@ -107,7 +107,13 @@ class Subscription {
 	}
 
 	/**
-	 * @codeCoverageIgnore
+	 * @return int|null the ID of the subscription or NULL if it has not been saved to the DB yet.
+	 */
+	public function getID() {
+		return $this->mId;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getTopic() {
