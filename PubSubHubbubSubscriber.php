@@ -50,6 +50,7 @@ $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscr
 $wgAutoloadClasses['PubSubHubbubSubscriber\\ApiSubscription'] = $dir . 'src/ApiSubscription.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\HookHandler'] = $dir . 'src/HookHandler.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscription.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionHandler'] = $dir . 'src/SubscriptionHandler.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriberClient'] = $dir . 'src/SubscriberClient.php';
 
 $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
