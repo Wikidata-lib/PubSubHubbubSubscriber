@@ -44,7 +44,7 @@ class ApiSubscription extends ApiBase {
 	 *
 	 * @param string $challenge The text to add to the response.
 	 */
-	private function acceptRequest( $challenge ) {
+	public function acceptRequest( $challenge ) {
 		$result = $this->getResult();
 		$result->addValue( null, 'mime', "text/plain" );
 		$result->addValue( null, 'text', $challenge );
@@ -53,8 +53,8 @@ class ApiSubscription extends ApiBase {
 	/**
 	 * Signal a declined request.
 	 */
-	private function declineRequest() {
-		header( "HTTP/1.1 404 Not Found", true, 404 );
+	public function declineRequest() {
+		@header( "HTTP/1.1 404 Not Found", true, 404 );
 		$result = $this->getResult();
 		$result->addValue( null, 'mime', "text/plain" );
 		$result->addValue( null, 'text', "" );
