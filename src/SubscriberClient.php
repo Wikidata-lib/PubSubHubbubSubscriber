@@ -2,7 +2,6 @@
 
 namespace PubSubHubbubSubscriber;
 
-use Http;
 use MWHttpRequest;
 
 class SubscriberClient {
@@ -22,7 +21,7 @@ class SubscriberClient {
 		$subscription = new Subscription( NULL, $this->mResourceURL );
 		$subscription->update();
 
-		self::sendSubscriptionRequest( $hubURL, $this->mResourceURL );
+		$this->sendSubscriptionRequest( $hubURL, $this->mResourceURL );
 	}
 
 	/**
@@ -32,20 +31,26 @@ class SubscriberClient {
 	 * @return string[] an indexed array containing values of all HTTP Link headers.
 	 */
 	function findRawLinkHeaders( $resourceURL ) {
-		$req = $this->createHeadRequest( $resourceURL );
+		$req = $this->createHttpRequest( 'HEAD', $resourceURL );
 		$req->execute();
 		$rawLinkHeaders = $req->getResponseHeaders();
 		return $rawLinkHeaders['link'];
 	}
 
 	/**
+	 * @param string $method
 	 * @param string $url
+	 * @param string[] $postData
 	 * @return MWHttpRequest
 	 */
-	function createHeadRequest( $url ) {
-		return MWHttpRequest::factory( $url, array(
-			'method' => 'HEAD',
-		) );
+	function createHttpRequest( $method, $url, $postData = NULL ) {
+		$options = array(
+			'method' => $method,
+		);
+		if ( $postData !== NULL ) {
+			$options['postData'] = $postData;
+		}
+		return MWHttpRequest::factory( $url, $options );
 	}
 
 	/**
@@ -65,19 +70,23 @@ class SubscriberClient {
 		return $linkHeaders;
 	}
 
-	private static function sendSubscriptionRequest( $hubURL, $resourceURL ) {
+	function sendSubscriptionRequest( $hubURL, $resourceURL ) {
 		$callbackURL = self::createCallbackURL( $resourceURL );
+		$postData = $this->createSubscriptionPostData( $resourceURL, $callbackURL );
 
-		Http::post( $hubURL, array(
-			'postData' => array(
-				'hub.callback' => $callbackURL,
-				'hub.mode' => 'subscribe',
-				'hub.verify' => 'async',
-				'hub.topic' => $resourceURL,
-				#'hub.secret' => "", // TODO
-			)
-		) );
+		$request = $this->createHttpRequest( 'POST', $hubURL, $postData );
+		$request->execute();
 		// TODO: Check for errors.
+	}
+
+	function createSubscriptionPostData( $resourceURL, $callbackURL ) {
+		return array(
+			'hub.callback' => $callbackURL,
+			'hub.mode' => 'subscribe',
+			'hub.verify' => 'async',
+			'hub.topic' => $resourceURL,
+			#'hub.secret' => "", // TODO
+		);
 	}
 
 	public static function createCallbackURL( $resourceURL ) {
