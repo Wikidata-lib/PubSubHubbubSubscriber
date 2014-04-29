@@ -15,6 +15,11 @@ use MediaWikiLangTestCase;
  */
 class SubscriberClientTest extends MediaWikiLangTestCase {
 
+	/**
+	 * @var SubscriberClient $mClient
+	 */
+	private $mClient;
+
 	protected function setUp() {
 		parent::setUp();
 		$this->setMwGlobals( array(
@@ -24,6 +29,31 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",
 		) );
+
+
+		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient', array( 'createHeadRequest' ), array( "testResource" ) );
+		$this->mClient->expects( $this->any() )
+			->method( 'createHeadRequest' )
+			->withAnyParameters()
+			->will( $this->returnValue( new HttpMockRequest() ) );
+	}
+
+	public function testSubscriberClientConstructor() {
+		$client = new SubscriberClient( "Test X" );
+		$this->assertAttributeEquals( "Test X", 'mResourceURL', $client );
+	}
+
+	public function testCreateHeadRequest() {
+		$client = new SubscriberClient( "http://a.resource/" );
+		$request = $client->createHeadRequest( "http://a.resource/" );
+
+		$this->assertEquals( "http://a.resource/", $request->getFinalUrl() );
+		$this->assertAttributeEquals( 'HEAD', 'method', $request );
+	}
+
+	public function testFindRawLinkHeaders() {
+		$result = $this->mClient->findRawLinkHeaders( "http://random.resource/" );
+		$this->assertEquals( "http://random.resource/actual.link", $result );
 	}
 
 	/**
@@ -89,6 +119,17 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
 			),
 		);
+	}
+
+}
+
+class HttpMockRequest {
+
+	public function execute() {
+	}
+
+	public function getResponseHeaders() {
+		return array( 'link' => "http://random.resource/actual.link" );
 	}
 
 }

@@ -14,7 +14,7 @@ class SubscriberClient {
 	}
 
 	public function subscribe() {
-		$rawLinkHeaders = self::findRawLinkHeaders( $this->mResourceURL );
+		$rawLinkHeaders = $this->findRawLinkHeaders( $this->mResourceURL );
 		$linkHeaders = self::parseLinkHeaders( $rawLinkHeaders );
 		$hubURL = $linkHeaders['hub'];
 		$this->mResourceURL = $linkHeaders['self'];
@@ -31,13 +31,21 @@ class SubscriberClient {
 	 * @param string $resourceURL The resource's URL.
 	 * @return string[] an indexed array containing values of all HTTP Link headers.
 	 */
-	private static function findRawLinkHeaders( $resourceURL ) {
-		$req = MWHttpRequest::factory( $resourceURL, array(
-			'method' => 'HEAD',
-		) );
+	function findRawLinkHeaders( $resourceURL ) {
+		$req = $this->createHeadRequest( $resourceURL );
 		$req->execute();
 		$rawLinkHeaders = $req->getResponseHeaders();
 		return $rawLinkHeaders['link'];
+	}
+
+	/**
+	 * @param string $url
+	 * @return MWHttpRequest
+	 */
+	function createHeadRequest( $url ) {
+		return MWHttpRequest::factory( $url, array(
+			'method' => 'HEAD',
+		) );
 	}
 
 	/**
