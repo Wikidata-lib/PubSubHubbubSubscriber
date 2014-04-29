@@ -7,9 +7,13 @@ use WikiImporter;
 
 class SubscriptionHandler {
 
-	public function handlePush() {
+	/**
+	 * @param string $file The file to read the POST data from. Defaults to stdin.
+	 * @return bool whether the pushed data could be accepted.
+	 */
+	public function handlePush( $file = "php://input" ) {
 		// The hub is POSTing new data.
-		$source = ImportStreamSource::newFromFile( "php://input" );
+		$source = ImportStreamSource::newFromFile( $file );
 		if ( $source->isGood() ) {
 			$importer = new WikiImporter( $source->value );
 			$importer->doImport();
