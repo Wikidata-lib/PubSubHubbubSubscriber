@@ -57,3 +57,4 @@ $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
 
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
 $wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
+$wgHooks['ImportHandlePageXMLTag'][] = 'PubSubHubbubSubscriber\\HookHandler::onImportHandleToplevelXMLTag';

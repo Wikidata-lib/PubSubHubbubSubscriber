@@ -3,6 +3,7 @@
 namespace PubSubHubbubSubscriber;
 
 use DatabaseUpdater;
+use XMLReader;
 
 class HookHandler {
 
@@ -33,6 +34,16 @@ class HookHandler {
 	public static function onUnitTestsList( &$files ) {
 		$files = array_merge( $files, glob( __DIR__ . '/../tests/phpunit/*Test.php' ) );
 		return true;
+	}
+
+	public static function onImportHandleToplevelXMLTag( $reader ) {
+		$tag = $reader->name;
+		if ( $tag != 'deletion' ) {
+			return true;
+		}
+		$importer = new DeletionXMLImporter( $reader );
+		$importer->doImport();
+		return false;
 	}
 
 }
