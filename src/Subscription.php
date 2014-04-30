@@ -4,16 +4,31 @@ namespace PubSubHubbubSubscriber;
 
 class Subscription {
 
+	/**
+	 * @var null|int $mId
+	 */
 	private $mId;
+	/**
+	 * @var string $mTopic
+	 */
 	private $mTopic;
+	/**
+	 * @var null|int $mExpires
+	 */
 	private $mExpires;
+	/**
+	 * @var bool $mConfirmed
+	 */
 	private $mConfirmed;
+	/**
+	 * @var bool $mUnsubscribe
+	 */
 	private $mUnsubscribe;
 
 	public function __construct( $id = NULL, $topic = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
 		$this->mId = $id;
 		$this->mTopic = $topic;
-		$this->mExpires = $expires;
+		$this->mExpires = $expires === NULL ? NULL : (int) $expires;
 		$this->mConfirmed = (bool) $confirmed;
 		$this->mUnsubscribe = (bool) $unsubscribe;
 	}
@@ -32,7 +47,7 @@ class Subscription {
 		return new Subscription(
 			$id,
 			$data->psb_topic,
-			$data->psb_expires,
+			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
 			$data->psb_confirmed,
 			$data->psb_unsubscribe
 		);
@@ -58,7 +73,7 @@ class Subscription {
 		return new Subscription(
 			$data->psb_id,
 			$topicURL,
-			$data->psb_expires,
+			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
 			$data->psb_confirmed,
 			$data->psb_unsubscribe
 		);
@@ -69,7 +84,7 @@ class Subscription {
 		if ( $this->mId ) {
 			$dbw->update( 'push_subscriptions',
 				array(
-					'psb_expires' => $this->mExpires,
+					'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
 					'psb_confirmed' => $this->mConfirmed,
 					'psb_unsubscribe' => $this->mUnsubscribe,
 				),
@@ -77,7 +92,7 @@ class Subscription {
 		} else {
 			$dbw->insert( 'push_subscriptions', array(
 				'psb_topic' => $this->mTopic,
-				'psb_expires' => $this->mExpires,
+				'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
 				'psb_confirmed' => $this->mConfirmed,
 				'psb_unsubscribe' => $this->mUnsubscribe,
 			) );
@@ -92,7 +107,13 @@ class Subscription {
 	}
 
 	/**
-	 * @codeCoverageIgnore
+	 * @return int|null the ID of the subscription or NULL if it has not been saved to the DB yet.
+	 */
+	public function getID() {
+		return $this->mId;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getTopic() {

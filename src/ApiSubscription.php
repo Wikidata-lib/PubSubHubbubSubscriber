@@ -5,77 +5,83 @@ namespace PubSubHubbubSubscriber;
 use ApiBase;
 use ApiFormatJson;
 use ApiFormatRaw;
-use ApiMain;
-use ImportStreamSource;
-use MWException;
-use WikiImporter;
 
-class SubscriptionCallback extends ApiBase {
-
-	public function __construct( ApiMain $main, $name, $prefix = '' ) {
-		parent::__construct( $main, $name, $prefix );
-	}
+class ApiSubscription extends ApiBase {
 
 	public function execute() {
 		$params = $this->extractRequestParams();
+		$challenge = $params['hub.challenge'];
+
+		$success = false;
+		$handler = $this->createSubscriptionHandler();
 
 		switch ( $params['hub.mode'] ) {
 			case 'push':
 				if ( !$this->getRequest()->wasPosted() ) {
-					throw new MWException("Illegal PuSH request.");
-				}
+					$this->dieUsage( 'push mode requires POST request', 'post_required', 400 );
+				} // @codeCoverageIgnore
+				$challenge = "";
 
-				// The hub is POSTing new data.
-				$source = ImportStreamSource::newFromFile( "php://input" );
-				if ( $source->isGood() ) {
-					$importer = new WikiImporter( $source->value );
-					$importer->doImport();
-					$this->acceptSubscriptionChange( "" );
-				} else {
-					$this->declineSubscriptionChange();
-				}
+				$success = $handler->handlePush();
 				break;
 			case 'subscribe':
-				$subscription = Subscription::findByTopic( $params['hub.topic'] );
-
-				if ( $subscription && !$subscription->isConfirmed() ) {
-					$subscription->setConfirmed(true);
-					$subscription->update();
-					$this->acceptSubscriptionChange( $params['hub.challenge'] );
-				} else {
-					$this->declineSubscriptionChange();
-				}
+				$success = $handler->handleSubscribe( $params['hub.topic'] );
 				break;
 			case 'unsubscribe':
-				$subscription = Subscription::findByTopic( $params['hub.topic'] );
-
-				if ( $subscription && $subscription->isUnsubscribed() ) {
-					$subscription->delete();
-					$this->acceptSubscriptionChange( $params['hub.challenge'] );
-				} else {
-					$this->declineSubscriptionChange();
-				}
+				$success = $handler->handleUnsubscribe( $params['hub.topic'] );
 				break;
+		}
+
+		if ( $success ) {
+			$this->acceptRequest( $challenge );
+		} else {
+			$this->declineRequest();
 		}
 	}
 
-	private function acceptSubscriptionChange( $challenge ) {
+	/**
+	 * @codeCoverageIgnore
+	 * @return SubscriptionHandler
+	 */
+	function createSubscriptionHandler() {
+		return new SubscriptionHandler();
+	}
+
+	/**
+	 * Signal an accepted request.
+	 *
+	 * @param string $challenge The text to add to the response.
+	 */
+	public function acceptRequest( $challenge ) {
 		$result = $this->getResult();
 		$result->addValue( null, 'mime', "text/plain" );
 		$result->addValue( null, 'text', $challenge );
 	}
 
-	private function declineSubscriptionChange() {
-		header( "Not Found", true, 404 );
+	/**
+	 * Signal a declined request.
+	 */
+	public function declineRequest() {
+		@header( "HTTP/1.1 404 Not Found", true, 404 );
 		$result = $this->getResult();
 		$result->addValue( null, 'mime', "text/plain" );
 		$result->addValue( null, 'text', "" );
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @return ApiFormatRaw the formatter used to format this API module's output.
+	 */
 	public function getCustomPrinter() {
 		return new ApiFormatRaw( $this->getMain(), new ApiFormatJson( $this->getMain(), 'json' ) );
 	}
 
+	/**
+	 * Return an array of allowed parameters.
+	 *
+	 * @codeCoverageIgnore
+	 * @return array all allowed parameters.
+	 */
 	public function getAllowedParams() {
 		return array(
 			'hub.mode' => array(
@@ -95,6 +101,10 @@ class SubscriptionCallback extends ApiBase {
 		);
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 * @return string[] a description of all valid parameters.
+	 */
 	public function getParamDescription() {
 		return array_merge( parent::getParamDescription(), array(
 			'hub.mode' => 'The literal string "subscribe" or "unsubscribe", which matches the original request to the '
@@ -109,6 +119,12 @@ class SubscriptionCallback extends ApiBase {
 		) );
 	}
 
+	/**
+	 * Returns the description for this API module.
+	 *
+	 * @codeCoverageIgnore
+	 * @return string the description for this API module.
+	 */
 	public function getDescription() {
 		return "API module to handle requests from the PubSubHubbub hub.";
 	}
