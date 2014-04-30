@@ -61,17 +61,6 @@ class ApiSubscriptionTest extends MediaWikiLangTestCase {
 	 * @dataProvider getExecuteData
 	 */
 	public function testExecute( $mode, $method, $topic, $challenge, $success ) {
-		// Create ApiMain with parameters.
-		$request = new DerivativeRequest(
-			new FauxRequest(),
-			array(
-				'action' => 'pushcallback',
-				'hub_mode' => $mode,
-				'hub_topic' => $topic,
-				'hub_challenge' => $challenge,
-			), true
-		);
-		$apiMain = new ApiMain( $request );
 
 		// Create mocked SubscriptionHandler.
 		$handler = $this->getMock( 'PubSubHubbubSubscriber\\SubscriptionHandler', array( $method ) );
@@ -82,7 +71,7 @@ class ApiSubscriptionTest extends MediaWikiLangTestCase {
 		// Create mocked API module.
 		$api = $this->getMock( 'PubSubHubbubSubscriber\\ApiSubscription',
 			array( 'createSubscriptionHandler' ),
-			array( $apiMain, 'pushcallback' ) );
+			array( $this->createApiMain( $mode, $topic, $challenge, true ), 'pushcallback' ) );
 		$api->expects( $this->once() )
 			->method( 'createSubscriptionHandler' )
 			->will( $this->returnValue( $handler ) );
@@ -102,19 +91,30 @@ class ApiSubscriptionTest extends MediaWikiLangTestCase {
 	 * @expectedException UsageException
 	 */
 	public function testExecutePushFail() {
+		$api = new ApiSubscription( $this->createApiMain( 'push', 'http://a.topic/', 'abc', false ), 'pushcallback' );
+		$api->execute();
+	}
+
+	/**
+	 * Create an ApiMain object with ApiSubscription-specific parameters.
+	 *
+	 * @param string $mode The mode to use. Must be one of "push", "subscribe" or "unsubscribe".
+	 * @param string $topic A topic URL.
+	 * @param string $challenge The challenge the API needs to response with if successful.
+	 * @param bool $posted whether a POST request should be used.
+	 * @return ApiMain
+	 */
+	public function createApiMain( $mode, $topic, $challenge, $posted ) {
 		$request = new DerivativeRequest(
 			new FauxRequest(),
 			array(
 				'action' => 'pushcallback',
-				'hub_mode' => 'push',
-				'hub_topic' => 'http://a.topic/',
-				'hub_challenge' => 'challenge',
-			)
+				'hub_mode' => $mode,
+				'hub_topic' => $topic,
+				'hub_challenge' => $challenge,
+			), $posted
 		);
-		$apiMain = new ApiMain( $request );
-
-		$api = new ApiSubscription( $apiMain, 'pushcallback' );
-		$api->execute();
+		return new ApiMain( $request );
 	}
 
 	public function getAcceptRequestData() {
