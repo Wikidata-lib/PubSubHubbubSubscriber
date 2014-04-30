@@ -1,0 +1,29 @@
+{
+	"name": "bp2013n2/pubsubhubbubsubscriber",
+	"type": "mediawiki-extension",
+	"description": "Allows receiving changes from a PubSubHubbub-enabled MediaWiki",
+	"keywords": ["pubsubhubbub", "push", "rss", "wikibase", "wikidata", "subscribe"],
+	"homepage": "https://www.mediawiki.org/wiki/Extension:PubSubHubbubSubscriber",
+	"license": "GPL-2.0+",
+	"authors": [
+		{
+			"name": "Sebastian Br\u00FCckner",
+			"email": "sebastian.brueckner@student.hpi.uni-potsdam.de",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"issues": "https://bugzilla.wikimedia.org/",
+		"forum": "https://www.mediawiki.org/wiki/Extension_talk:PubSubHubbubSubscriber",
+		"wiki": "https://www.mediawiki.org/wiki/Extension:PubSubHubbubSubscriber"
+	},
+	"require": {
+		"php": ">=5.3.10"
+	},
+	"minimum-stability": "dev",
+	"autoload": {
+		"files": [
+			"PubSubHubbubSubscriber.php"
+		]
+	}
+}
