@@ -120,8 +120,10 @@ class ApiSubscription extends ApiBase {
 	}
 
 	/**
+	 * Returns the description for this API module.
+	 *
 	 * @codeCoverageIgnore
-	 * @return string the API module's description.
+	 * @return string the description for this API module.
 	 */
 	public function getDescription() {
 		return "API module to handle requests from the PubSubHubbub hub.";
