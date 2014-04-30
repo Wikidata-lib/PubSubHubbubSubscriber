@@ -13,13 +13,13 @@ class ApiSubscription extends ApiBase {
 		$challenge = $params['hub.challenge'];
 
 		$success = false;
-		$handler = new SubscriptionHandler();
+		$handler = $this->createSubscriptionHandler();
 
 		switch ( $params['hub.mode'] ) {
 			case 'push':
 				if ( !$this->getRequest()->wasPosted() ) {
 					$this->dieUsage( 'push mode requires POST request', 'post_required', 400 );
-				}
+				} // @codeCoverageIgnore
 				$challenge = "";
 
 				$success = $handler->handlePush();
@@ -37,6 +37,14 @@ class ApiSubscription extends ApiBase {
 		} else {
 			$this->declineRequest();
 		}
+	}
+
+	/**
+	 * @codeCoverageIgnore
+	 * @return SubscriptionHandler
+	 */
+	function createSubscriptionHandler() {
+		return new SubscriptionHandler();
 	}
 
 	/**
