@@ -52,9 +52,10 @@ $wgAutoloadClasses['PubSubHubbubSubscriber\\HookHandler'] = $dir . 'src/HookHand
 $wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscription.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionHandler'] = $dir . 'src/SubscriptionHandler.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriberClient'] = $dir . 'src/SubscriberClient.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\DeletionXMLImporter'] = $dir . 'src/DeletionXMLImporter.php';
 
 $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
 
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
 $wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
-$wgHooks['ImportHandlePageXMLTag'][] = 'PubSubHubbubSubscriber\\HookHandler::onImportHandleToplevelXMLTag';
+$wgHooks['ImportHandleToplevelXMLTag'][] = 'PubSubHubbubSubscriber\\HookHandler::onImportHandleToplevelXMLTag';

@@ -36,7 +36,7 @@ class HookHandler {
 		return true;
 	}
 
-	public static function onImportHandleToplevelXMLTag( $reader ) {
+	public static function onImportHandleToplevelXMLTag(  XMLReader $reader ) {
 		$tag = $reader->name;
 		if ( $tag != 'deletion' ) {
 			return true;
