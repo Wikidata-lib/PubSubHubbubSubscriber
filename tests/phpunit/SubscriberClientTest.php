@@ -37,9 +37,12 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->mClient->expects( $this->any() )
 			->method( 'createHttpRequest' )
 			->withAnyParameters()
-			->will( $this->returnCallback( function( $a, $b, $c ) {
-				return $this->mRequest = new HttpMockRequest( $a, $b, $c );
-			} ) );
+			->will( $this->returnCallback( array( $this, 'mockCreateHttpRequest' ) ) );
+	}
+
+	public function mockCreateHttpRequest( $method, $hubURL, $postData ) {
+		$this->mRequest = new HttpMockRequest( $method, $hubURL, $postData );
+		return $this->mRequest;
 	}
 
 	/**
