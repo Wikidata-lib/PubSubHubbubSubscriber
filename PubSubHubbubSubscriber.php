@@ -28,17 +28,32 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 
 global $wgExtensionCredits;
 global $wgExtensionMessagesFiles, $wgMessagesDirs;
+global $wgAutoloadClasses;
+global $wgAPIModules;
+global $wgHooks;
 
 $wgExtensionCredits['other'][] = array(
 	'path' => __FILE__,
 	'name' => 'PubSubHubbubSubscriber',
 	'author' => array( 'BP2013N2' ),
 	'url' => 'https://www.mediawiki.org/wiki/Extension:PubSubHubbubSubscriber',
+	'license-name' => 'GPLv2',
 	'descriptionmsg' => 'pubsubhubbubsubscriber-desc',
 	'version'  => 0.1,
 );
 
 $dir = __DIR__ . '/';
 
-$wgMessagesDirs['PubSubHubbub'] = $dir . 'i18n';
+$wgMessagesDirs['PubSubHubbubSubscriber'] = $dir . 'i18n';
 $wgExtensionMessagesFiles['PubSubHubbubSubscriber'] = $dir . 'PubSubHubbubSubscriber.i18n.php';
+
+$wgAutoloadClasses['PubSubHubbubSubscriber\\ApiSubscription'] = $dir . 'src/ApiSubscription.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\HookHandler'] = $dir . 'src/HookHandler.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscription.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionHandler'] = $dir . 'src/SubscriptionHandler.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriberClient'] = $dir . 'src/SubscriberClient.php';
+
+$wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
+
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
+$wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
