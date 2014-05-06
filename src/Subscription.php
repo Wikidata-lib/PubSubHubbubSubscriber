@@ -79,6 +79,28 @@ class Subscription {
 		);
 	}
 
+	/**
+	 * @return Subscription[]
+	 */
+	public static function getAll() {
+		$dbr = wfGetDB( DB_SLAVE );
+		$result = $dbr->select( 'push_subscriptions',
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ) );
+
+		$subscriptions = array();
+
+		while ( ( $data = $result->fetchObject() ) !== false ) {
+			$subscriptions[] =  new Subscription(
+				$data->psb_id,
+				$data->psb_topic,
+				$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
+				$data->psb_confirmed,
+				$data->psb_unsubscribe
+			);
+		}
+		return $subscriptions;
+	}
+
 	public function update() {
 		$dbw = wfGetDB( DB_MASTER );
 		if ( $this->mId ) {
