@@ -6,6 +6,7 @@ use Language;
 use MediaWikiLangTestCase;
 
 /**
+ * @group Database
  * @group PubSubHubbubSubscriber
  *
  * @licence GNU GPL v2+
@@ -32,6 +33,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",
 		) );
+		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient', array( 'createHttpRequest' ), array( "http://random.resource/" ) );
 		$this->mClient->expects( $this->any() )
