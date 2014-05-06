@@ -3,6 +3,7 @@
 namespace PubSubHubbubSubscriber\Maintenance;
 
 use Maintenance;
+use PubSubHubbubSubscriber\PubSubHubbubException;
 use PubSubHubbubSubscriber\SubscriberClient;
 use PubSubHubbubSubscriber\Subscription;
 
@@ -33,7 +34,11 @@ class ManageSubscriptions extends Maintenance {
 		if ( $modeCreate ) {
 			$url = $this->getOption( 'create' );
 			$client = new SubscriberClient( $url );
-			$client->subscribe();
+			try {
+				$client->subscribe();
+			} catch ( PubSubHubbubException $e ) {
+				echo "Error occurred:" . PHP_EOL . $e->getMessage() . PHP_EOL;
+			}
 		}
 		if ( $modeDelete ) {
 			// TODO
