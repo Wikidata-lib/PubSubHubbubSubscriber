@@ -57,7 +57,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleSubscribeNonExistent() {
-		$success = $this->mHandler->handleSubscribe( "http://some.nonexistent.topic/" );
+		$success = $this->mHandler->handleSubscribe( "http://some.nonexistent.topic/", 1337 );
 		$this->assertFalse( $success );
 	}
 
@@ -65,7 +65,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$subscription = new Subscription( NULL, "http://topic/", NULL, true, false );
 		$subscription->update();
 
-		$success = $this->mHandler->handleSubscribe( "http://topic/" );
+		$success = $this->mHandler->handleSubscribe( "http://topic/", 42 );
 		$this->assertFalse( $success );
 		$subscription = Subscription::findByTopic( "http://topic/" );
 		$this->assertTrue( $subscription->isConfirmed() );
@@ -75,7 +75,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$subscription = new Subscription( NULL, "http://another.topic/", NULL, false, false );
 		$subscription->update();
 
-		$success = $this->mHandler->handleSubscribe( "http://another.topic/" );
+		$success = $this->mHandler->handleSubscribe( "http://another.topic/", 21 );
 		$this->assertTrue( $success );
 		$subscription = Subscription::findByTopic( "http://another.topic/" );
 		$this->assertTrue( $subscription->isConfirmed() );
