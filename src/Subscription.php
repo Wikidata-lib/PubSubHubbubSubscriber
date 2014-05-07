@@ -101,7 +101,7 @@ class Subscription {
 			$dbw->update( 'push_subscriptions',
 				array(
 					'psb_expires' => $this->mExpires === NULL ? NULL
-						: $dbw->timestamp( $this->mExpires->getTimestamp() ),
+						: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 					'psb_confirmed' => $this->mConfirmed,
 					'psb_unsubscribe' => $this->mUnsubscribe,
 				),
@@ -109,7 +109,8 @@ class Subscription {
 		} else {
 			$dbw->insert( 'push_subscriptions', array(
 				'psb_topic' => $this->mTopic,
-				'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires->getTimestamp() ),
+				'psb_expires' => $this->mExpires === NULL ? NULL
+					: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 				'psb_confirmed' => $this->mConfirmed,
 				'psb_unsubscribe' => $this->mUnsubscribe,
 			) );
@@ -139,7 +140,7 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
-	 * @return int|null
+	 * @return MWTimestamp|null
 	 */
 	public function getExpires() {
 		return $this->mExpires;
@@ -147,10 +148,10 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
-	 * @param int $expires
+	 * @param MWTimestamp|null $expires
 	 */
 	public function setExpires( $expires ) {
-		$this->mExpires = (int) $expires;
+		$this->mExpires = $expires;
 	}
 
 	/**
