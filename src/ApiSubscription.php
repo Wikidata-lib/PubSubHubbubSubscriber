@@ -25,7 +25,7 @@ class ApiSubscription extends ApiBase {
 				$success = $handler->handlePush();
 				break;
 			case 'subscribe':
-				$success = $handler->handleSubscribe( $params['hub.topic'] );
+				$success = $handler->handleSubscribe( $params['hub.topic'], (int) $params['hub.lease_seconds'] );
 				break;
 			case 'unsubscribe':
 				$success = $handler->handleUnsubscribe( $params['hub.topic'] );
