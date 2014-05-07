@@ -33,10 +33,20 @@ class Subscription {
 		$this->mUnsubscribe = (bool) $unsubscribe;
 	}
 
+	public static function createFromDBObject( $object ) {
+		return new self(
+			$object->psb_id,
+			$object->psb_topic,
+			$object->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $object->psb_expires ),
+			(bool) $object->psb_confirmed,
+			(bool) $object->psb_unsubscribe
+		);
+	}
+
 	public static function findByID( $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_id' => $id ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -44,13 +54,7 @@ class Subscription {
 		}
 
 		$data = $result->fetchObject();
-		return new Subscription(
-			$id,
-			$data->psb_topic,
-			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
-			$data->psb_confirmed,
-			$data->psb_unsubscribe
-		);
+		return self::createFromDBObject( $data );
 	}
 
 	/**
@@ -62,7 +66,7 @@ class Subscription {
 	public static function findByTopic( $topicURL ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_id', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_topic' => $topicURL ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -70,13 +74,7 @@ class Subscription {
 		}
 
 		$data = $result->fetchObject();
-		return new Subscription(
-			$data->psb_id,
-			$topicURL,
-			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
-			$data->psb_confirmed,
-			$data->psb_unsubscribe
-		);
+		return self::createFromDBObject( $data );
 	}
 
 	/**
@@ -90,13 +88,7 @@ class Subscription {
 		$subscriptions = array();
 
 		while ( ( $data = $result->fetchObject() ) !== false ) {
-			$subscriptions[] =  new Subscription(
-				$data->psb_id,
-				$data->psb_topic,
-				$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
-				$data->psb_confirmed,
-				$data->psb_unsubscribe
-			);
+			$subscriptions[] = self::createFromDBObject( $data );
 		}
 		return $subscriptions;
 	}
