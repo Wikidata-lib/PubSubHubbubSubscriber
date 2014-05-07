@@ -122,6 +122,14 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
+	 * @return int|null
+	 */
+	public function getExpires() {
+		return $this->mExpires;
+	}
+
+	/**
+	 * @codeCoverageIgnore
 	 * @param int $expires
 	 */
 	public function setExpires( $expires ) {

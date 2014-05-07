@@ -33,7 +33,7 @@ class SubscriptionHandler {
 
 		if ( $subscription && !$subscription->isConfirmed() ) {
 			$subscription->setConfirmed(true);
-			$subscription->setExpires( time() + $lease_seconds );
+			$subscription->setExpires( $_SERVER['REQUEST_TIME'] + $lease_seconds );
 			$subscription->update();
 			return true;
 		} else {
