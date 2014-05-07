@@ -28,7 +28,13 @@ class ManageSubscriptions extends Maintenance {
 		if ( $modeList ) {
 			$subscriptions = Subscription::getAll();
 			foreach ( $subscriptions as $subscription ) {
-				echo $subscription->getTopic() . "\n";
+				echo $subscription->getTopic() . PHP_EOL;
+				echo "Verified: " . ( $subscription->isConfirmed() ? 'Yes' : 'No') . PHP_EOL;
+				if ( $subscription->isConfirmed() ) {
+					echo "  Valid until: " . $subscription->getExpires()->getHumanTimestamp() . PHP_EOL;
+				}
+				echo "Marked for deletion: " . ( $subscription->isUnsubscribed() ? 'Yes' : 'No' ) . PHP_EOL;
+				echo PHP_EOL;
 			}
 		}
 		if ( $modeCreate ) {
