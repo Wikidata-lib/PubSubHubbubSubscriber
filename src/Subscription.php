@@ -2,6 +2,8 @@
 
 namespace PubSubHubbubSubscriber;
 
+use MWTimestamp;
+
 class Subscription {
 
 	/**
@@ -13,7 +15,7 @@ class Subscription {
 	 */
 	private $mTopic;
 	/**
-	 * @var null|int $mExpires
+	 * @var null|MWTimestamp $mExpires
 	 */
 	private $mExpires;
 	/**
@@ -28,7 +30,7 @@ class Subscription {
 	public function __construct( $id = NULL, $topic = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
 		$this->mId = $id;
 		$this->mTopic = $topic;
-		$this->mExpires = $expires === NULL ? NULL : (int) $expires;
+		$this->mExpires = $expires;
 		$this->mConfirmed = (bool) $confirmed;
 		$this->mUnsubscribe = (bool) $unsubscribe;
 	}
@@ -37,7 +39,7 @@ class Subscription {
 		return new self(
 			$object->psb_id,
 			$object->psb_topic,
-			$object->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $object->psb_expires ),
+			$object->psb_expires === NULL ? NULL : new MWTimestamp( $object->psb_expires ),
 			(bool) $object->psb_confirmed,
 			(bool) $object->psb_unsubscribe
 		);
@@ -98,7 +100,8 @@ class Subscription {
 		if ( $this->mId ) {
 			$dbw->update( 'push_subscriptions',
 				array(
-					'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
+					'psb_expires' => $this->mExpires === NULL ? NULL
+						: $dbw->timestamp( $this->mExpires->getTimestamp() ),
 					'psb_confirmed' => $this->mConfirmed,
 					'psb_unsubscribe' => $this->mUnsubscribe,
 				),
@@ -106,7 +109,7 @@ class Subscription {
 		} else {
 			$dbw->insert( 'push_subscriptions', array(
 				'psb_topic' => $this->mTopic,
-				'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
+				'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires->getTimestamp() ),
 				'psb_confirmed' => $this->mConfirmed,
 				'psb_unsubscribe' => $this->mUnsubscribe,
 			) );
