@@ -21,7 +21,7 @@ class SubscriberClient {
 		$subscription = new Subscription( NULL, $this->mResourceURL );
 		$subscription->update();
 
-		$this->sendSubscriptionRequest( $hubURL, $this->mResourceURL );
+		$this->sendRequest( 'subscribe', $hubURL, $this->mResourceURL );
 	}
 
 	/**
@@ -70,9 +70,14 @@ class SubscriberClient {
 		return $linkHeaders;
 	}
 
-	function sendSubscriptionRequest( $hubURL, $resourceURL ) {
+	/**
+	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
+	 * @param string $hubURL
+	 * @param string $resourceURL
+	 */
+	function sendRequest( $mode, $hubURL, $resourceURL ) {
 		$callbackURL = self::createCallbackURL( $resourceURL );
-		$postData = $this->createPostData( 'subscribe', $resourceURL, $callbackURL );
+		$postData = $this->createPostData( $mode, $resourceURL, $callbackURL );
 
 		$request = $this->createHttpRequest( 'POST', $hubURL, $postData );
 		$request->execute();

@@ -98,23 +98,25 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	}
 
 	/**
-	 * @dataProvider getCallbackData
+	 * @dataProvider getData
 	 * @param string $mode Not used here.
+	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreateCallbackURL( $mode, $resourceURL, $callbackURL ) {
+	public function testCreateCallbackURL( $mode, $hub, $resourceURL, $callbackURL ) {
 		$this->assertEquals( $callbackURL, SubscriberClient::createCallbackURL( $resourceURL ));
 	}
 
 	/**
 	 * @covers PubSubHubbubSubscriber\SubscriberClient::createPostData
-	 * @dataProvider getCallbackData
+	 * @dataProvider getData
 	 * @param string $mode
+	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreatePostData( $mode, $resourceURL, $callbackURL ) {
+	public function testCreatePostData( $mode, $hub, $resourceURL, $callbackURL ) {
 		$postData = $this->mClient->createPostData( $mode, $resourceURL, $callbackURL );
 		$this->assertEquals( $mode, $postData['hub.mode'] );
 		$this->assertEquals( $resourceURL, $postData['hub.topic'] );
@@ -122,12 +124,17 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	}
 
 	/**
-	 * @covers PubSubHubbubSubscriber\SubscriberClient::sendSubscriptionRequest
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::sendRequest
+	 * @dataProvider getData
+	 * @param string $mode
+	 * @param string $hub
+	 * @param string $resourceURL Not used here.
+	 * @param string $callbackURL Not used here.
 	 */
-	public function testSendSubscriptionRequest() {
-		$this->mClient->sendSubscriptionRequest( "http://a.hub/", array() );
+	public function testSendRequest( $mode, $hub, $resourceURL, $callbackURL ) {
+		$this->mClient->sendRequest( $mode, $hub, array() );
 		$this->assertEquals( 'POST', $this->mRequest->mMethod );
-		$this->assertEquals( 'http://a.hub/', $this->mRequest->mHubURL );
+		$this->assertEquals( $hub, $this->mRequest->mHubURL );
 	}
 
 	/**
@@ -172,15 +179,17 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		);
 	}
 
-	public function getCallbackData() {
+	public function getData() {
 		return array(
 			array(
 				'subscribe',
+				'http://a.hub/',
 				'http://resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F'
 			),
 			array(
 				'unsubscribe',
+				'http://a.different.hub/',
 				'http://another.resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
 			),
