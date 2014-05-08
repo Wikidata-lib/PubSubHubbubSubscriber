@@ -6,22 +6,47 @@ use MWHttpRequest;
 
 class SubscriberClient {
 
+	/**
+	 * @var string $mResourceURL
+	 */
 	private $mResourceURL;
+
+	/**
+	 * @var string $mHubURL
+	 */
+	private $mHubURL;
 
 	public function __construct( $resourceURL ) {
 		$this->mResourceURL = $resourceURL;
 	}
 
-	public function subscribe() {
+	private function retrieveLinkHeaders() {
 		$rawLinkHeaders = $this->findRawLinkHeaders( $this->mResourceURL );
 		$linkHeaders = self::parseLinkHeaders( $rawLinkHeaders );
-		$hubURL = $linkHeaders['hub'];
+		$this->mHubURL = $linkHeaders['hub'];
 		$this->mResourceURL = $linkHeaders['self'];
+	}
+
+	public function subscribe() {
+		$this->retrieveLinkHeaders();
 
 		$subscription = new Subscription( NULL, $this->mResourceURL );
 		$subscription->update();
 
-		$this->sendRequest( 'subscribe', $hubURL, $this->mResourceURL );
+		$this->sendRequest( 'subscribe', $this->mHubURL, $this->mResourceURL );
+	}
+
+	public function unsubscribe() {
+		$this->retrieveLinkHeaders();
+
+		$subscription = Subscription::findByTopic( $this->mResourceURL );
+		if ( !$subscription ) {
+			// TODO: Error handling
+		}
+		$subscription->setUnsubscribed( true );
+		$subscription->update();
+
+		$this->sendRequest( 'unsubscribe', $this->mHubURL, $this->mResourceURL );
 	}
 
 	/**

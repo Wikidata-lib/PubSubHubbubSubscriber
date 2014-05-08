@@ -6,6 +6,7 @@ use Language;
 use MediaWikiLangTestCase;
 
 /**
+ * @group Database
  * @group PubSubHubbubSubscriber
  *
  * @licence GNU GPL v2+
@@ -32,6 +33,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",
 		) );
+		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient', array( 'createHttpRequest' ), array( "http://random.resource/" ) );
 		$this->mClient->expects( $this->any() )
@@ -144,6 +146,25 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->mClient->subscribe();
 		$subscription = Subscription::findByTopic( "http://random.resource/actual.link" );
 		$this->assertNotNull( $subscription );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::unsubscribe
+	 */
+	public function testUnsubscribe() {
+		$resourceURL = "http://random.resource/actual.link";
+
+		// Create Subscription.
+		$subscription = new Subscription( NULL, $resourceURL, NULL, true, false );
+		$subscription->update();
+
+		// Unsubscribe it.
+		$this->mClient->unsubscribe();
+
+		// Check if it's marked for unsubscription.
+		$subscription = Subscription::findByTopic( $resourceURL );
+		$this->assertNotNull( $subscription );
+		$this->assertTrue( $subscription->isUnsubscribed() );
 	}
 
 	public function getLinkHeaders() {
