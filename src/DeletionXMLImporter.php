@@ -1,10 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: alexander.lehmann
- * Date: 4/29/14
- * Time: 4:28 PM
- */
+
 
 namespace PubSubHubbubSubscriber;
 
