@@ -72,21 +72,28 @@ class SubscriberClient {
 
 	function sendSubscriptionRequest( $hubURL, $resourceURL ) {
 		$callbackURL = self::createCallbackURL( $resourceURL );
-		$postData = $this->createSubscriptionPostData( $resourceURL, $callbackURL );
+		$postData = $this->createPostData( 'subscribe', $resourceURL, $callbackURL );
 
 		$request = $this->createHttpRequest( 'POST', $hubURL, $postData );
 		$request->execute();
 		// TODO: Check for errors.
 	}
 
-	function createSubscriptionPostData( $resourceURL, $callbackURL ) {
-		return array(
+	/**
+	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
+	 * @param string $resourceURL
+	 * @param string $callbackURL
+	 * @return string[]
+	 */
+	function createPostData( $mode, $resourceURL, $callbackURL ) {
+		$data = array(
 			'hub.callback' => $callbackURL,
-			'hub.mode' => 'subscribe',
+			'hub.mode' => $mode,
 			'hub.verify' => 'async',
 			'hub.topic' => $resourceURL,
-			#'hub.secret' => "", // TODO
 		);
+		#$data['hub.secret'] = ""; // TODO
+		return $data;
 	}
 
 	public static function createCallbackURL( $resourceURL ) {

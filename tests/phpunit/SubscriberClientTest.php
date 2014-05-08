@@ -99,21 +99,24 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 
 	/**
 	 * @dataProvider getCallbackData
+	 * @param string $mode Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreateCallbackURL( $resourceURL, $callbackURL ) {
+	public function testCreateCallbackURL( $mode, $resourceURL, $callbackURL ) {
 		$this->assertEquals( $callbackURL, SubscriberClient::createCallbackURL( $resourceURL ));
 	}
 
 	/**
-	 * @covers PubSubHubbubSubscriber\SubscriberClient::createSubscriptionPostData
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::createPostData
 	 * @dataProvider getCallbackData
+	 * @param string $mode
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreateSubscriptionPostData( $resourceURL, $callbackURL ) {
-		$postData = $this->mClient->createSubscriptionPostData( $resourceURL, $callbackURL );
+	public function testCreatePostData( $mode, $resourceURL, $callbackURL ) {
+		$postData = $this->mClient->createPostData( $mode, $resourceURL, $callbackURL );
+		$this->assertEquals( $mode, $postData['hub.mode'] );
 		$this->assertEquals( $resourceURL, $postData['hub.topic'] );
 		$this->assertEquals( $callbackURL, $postData['hub.callback'] );
 	}
@@ -172,10 +175,12 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	public function getCallbackData() {
 		return array(
 			array(
+				'subscribe',
 				'http://resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F'
 			),
 			array(
+				'unsubscribe',
 				'http://another.resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
 			),
