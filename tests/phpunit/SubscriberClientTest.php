@@ -56,6 +56,15 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	}
 
 	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
+	 */
+	public function testRetrieveLinkHeaders() {
+		$this->mClient->retrieveLinkHeaders();
+		$this->assertAttributeEquals( 'http://a.hub/', 'mHubURL', $this->mClient );
+		$this->assertAttributeEquals( 'http://random.resource/actual.link', 'mResourceURL', $this->mClient );
+	}
+
+	/**
 	 * @covers PubSubHubbubSubscriber\SubscriberClient::createHttpRequest
 	 */
 	public function testCreateHeadRequest() {

@@ -20,7 +20,7 @@ class SubscriberClient {
 		$this->mResourceURL = $resourceURL;
 	}
 
-	private function retrieveLinkHeaders() {
+	function retrieveLinkHeaders() {
 		$rawLinkHeaders = $this->findRawLinkHeaders( $this->mResourceURL );
 		$linkHeaders = self::parseLinkHeaders( $rawLinkHeaders );
 		$this->mHubURL = $linkHeaders['hub'];
