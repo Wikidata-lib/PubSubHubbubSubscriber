@@ -6,6 +6,7 @@ use Language;
 use MediaWikiLangTestCase;
 
 /**
+ * @group Database
  * @group PubSubHubbubSubscriber
  *
  * @licence GNU GPL v2+
@@ -32,6 +33,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",
 		) );
+		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient', array( 'createHttpRequest' ), array( "http://random.resource/" ) );
 		$this->mClient->expects( $this->any() )
@@ -51,6 +53,15 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	public function testSubscriberClientConstructor() {
 		$client = new SubscriberClient( "Test X" );
 		$this->assertAttributeEquals( "Test X", 'mResourceURL', $client );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
+	 */
+	public function testRetrieveLinkHeaders() {
+		$this->mClient->retrieveLinkHeaders();
+		$this->assertAttributeEquals( 'http://a.hub/', 'mHubURL', $this->mClient );
+		$this->assertAttributeEquals( 'http://random.resource/actual.link', 'mResourceURL', $this->mClient );
 	}
 
 	/**
@@ -98,33 +109,43 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	}
 
 	/**
-	 * @dataProvider getCallbackData
+	 * @dataProvider getData
+	 * @param string $mode Not used here.
+	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreateCallbackURL( $resourceURL, $callbackURL ) {
+	public function testCreateCallbackURL( $mode, $hub, $resourceURL, $callbackURL ) {
 		$this->assertEquals( $callbackURL, SubscriberClient::createCallbackURL( $resourceURL ));
 	}
 
 	/**
-	 * @covers PubSubHubbubSubscriber\SubscriberClient::createSubscriptionPostData
-	 * @dataProvider getCallbackData
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::createPostData
+	 * @dataProvider getData
+	 * @param string $mode
+	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
 	 */
-	public function testCreateSubscriptionPostData( $resourceURL, $callbackURL ) {
-		$postData = $this->mClient->createSubscriptionPostData( $resourceURL, $callbackURL );
+	public function testCreatePostData( $mode, $hub, $resourceURL, $callbackURL ) {
+		$postData = $this->mClient->createPostData( $mode, $resourceURL, $callbackURL );
+		$this->assertEquals( $mode, $postData['hub.mode'] );
 		$this->assertEquals( $resourceURL, $postData['hub.topic'] );
 		$this->assertEquals( $callbackURL, $postData['hub.callback'] );
 	}
 
 	/**
-	 * @covers PubSubHubbubSubscriber\SubscriberClient::sendSubscriptionRequest
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::sendRequest
+	 * @dataProvider getData
+	 * @param string $mode
+	 * @param string $hub
+	 * @param string $resourceURL Not used here.
+	 * @param string $callbackURL Not used here.
 	 */
-	public function testSendSubscriptionRequest() {
-		$this->mClient->sendSubscriptionRequest( "http://a.hub/", array() );
+	public function testSendRequest( $mode, $hub, $resourceURL, $callbackURL ) {
+		$this->mClient->sendRequest( $mode, $hub, array() );
 		$this->assertEquals( 'POST', $this->mRequest->mMethod );
-		$this->assertEquals( 'http://a.hub/', $this->mRequest->mHubURL );
+		$this->assertEquals( $hub, $this->mRequest->mHubURL );
 	}
 
 	/**
@@ -134,6 +155,25 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->mClient->subscribe();
 		$subscription = Subscription::findByTopic( "http://random.resource/actual.link" );
 		$this->assertNotNull( $subscription );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::unsubscribe
+	 */
+	public function testUnsubscribe() {
+		$resourceURL = "http://random.resource/actual.link";
+
+		// Create Subscription.
+		$subscription = new Subscription( NULL, $resourceURL, NULL, true, false );
+		$subscription->update();
+
+		// Unsubscribe it.
+		$this->mClient->unsubscribe();
+
+		// Check if it's marked for unsubscription.
+		$subscription = Subscription::findByTopic( $resourceURL );
+		$this->assertNotNull( $subscription );
+		$this->assertTrue( $subscription->isUnsubscribed() );
 	}
 
 	public function getLinkHeaders() {
@@ -169,13 +209,17 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		);
 	}
 
-	public function getCallbackData() {
+	public function getData() {
 		return array(
 			array(
+				'subscribe',
+				'http://a.hub/',
 				'http://resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F'
 			),
 			array(
+				'unsubscribe',
+				'http://a.different.hub/',
 				'http://another.resource/',
 				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
 			),
