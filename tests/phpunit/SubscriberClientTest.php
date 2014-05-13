@@ -65,10 +65,19 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	/**
 	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
 	 */
-	public function testRetrieveLinkHeaders() {
+	public function testRetrieveLinkHeadersSuccessful() {
 		$this->mClient->retrieveLinkHeaders();
 		$this->assertAttributeEquals( 'http://a.hub/', 'mHubURL', $this->mClient );
 		$this->assertAttributeEquals( 'http://random.resource/actual.link', 'mResourceURL', $this->mClient );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
+	 * @expectedException \PubSubHubbubSubscriber\PubSubHubbubException
+	 */
+	public function testRetrieveLinkHeadersUnsuccessful() {
+		$this->mMockRequestSuccess = false;
+		$this->mClient->retrieveLinkHeaders();
 	}
 
 	/**
@@ -171,15 +180,6 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->mClient->subscribe();
 		$subscription = Subscription::findByTopic( "http://random.resource/actual.link" );
 		$this->assertNotNull( $subscription );
-	}
-
-	/**
-	 * @covers PubSubHubbubSubscriber\SubscriberClient::subscribe
-	 * @expectedException \PubSubHubbubSubscriber\PubSubHubbubException
-	 */
-	public function testSubscribeUnsuccessful() {
-		$this->mMockRequestSuccess = false;
-		$this->mClient->subscribe();
 	}
 
 	/**
