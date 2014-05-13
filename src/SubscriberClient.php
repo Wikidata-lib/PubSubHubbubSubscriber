@@ -44,7 +44,7 @@ class SubscriberClient {
 
 		$subscription = Subscription::findByTopic( $this->mResourceURL );
 		if ( !$subscription ) {
-			// TODO: Error handling
+			throw new PubSubHubbubException( "There is no active subscription for the specified resource!" );
 		}
 		$subscription->setUnsubscribed( true );
 		$subscription->update();

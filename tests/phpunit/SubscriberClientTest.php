@@ -201,6 +201,14 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->assertTrue( $subscription->isUnsubscribed() );
 	}
 
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::unsubscribe
+	 * @expectedException \PubSubHubbubSubscriber\PubSubHubbubException
+	 */
+	public function testUnsubscribeWithoutSubscription() {
+		$this->mClient->unsubscribe();
+	}
+
 	public function getLinkHeaders() {
 		return array(
 			array(
