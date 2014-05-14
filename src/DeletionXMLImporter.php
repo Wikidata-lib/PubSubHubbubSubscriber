@@ -18,7 +18,7 @@ class DeletionXMLImporter {
 
 	public function doImport() {
 		$logInfo = null;
-		while ( $this->reader->read()) {
+		while ( $this->reader->read() ) {
 			$tag = $this->reader->name;
 			$type = $this->reader->nodeType;
 
@@ -64,7 +64,7 @@ class DeletionXMLImporter {
 		$fields = array( 'id', 'ip', 'username' );
 		$info = array();
 
-		while ( $this->reader->read()) {
+		while ( $this->reader->read() ) {
 			$tag = $this->reader->name;
 			$type = $this->reader->nodeType;
 			if ( $tag == 'contributor' && $type == XmlReader::END_ELEMENT ) {
@@ -78,7 +78,7 @@ class DeletionXMLImporter {
 	}
 
 	function doDeletion( $logInfo ) {
-		if ( isset(  $logInfo['contributor']['username'] ) ) {
+		if ( isset( $logInfo['contributor']['username'] ) ) {
 			$user = User::newFromName( $logInfo['contributor']['username'] );
 		}
 		else {

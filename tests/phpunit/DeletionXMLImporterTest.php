@@ -123,7 +123,7 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 	 * @depends testNodeContents
 	 */
 	public function testParseContributor() {
-		$importer = $this->newDeletionXMLImporter( $this->getCompleteDeletionXML() );
+		$importer = $this->newDeletionXMLImporter( $this->getContributorXML() );
 		$logInfo = $importer->parseContributor();
 		$this->assertTrue( $logInfo['id'] == 1 && $logInfo['username'] == 'TestUser' );
 	}
@@ -171,8 +171,8 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 			'logtitle' => 'TestPage',
 			'params' => 'a:0:{}',
 			'contributor' => array(
-			'id' => 1,
-			'username' => 'TestUser'
+				'id' => 1,
+				'username' => 'TestUser'
 			)
 		);
 	}
