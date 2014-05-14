@@ -47,7 +47,13 @@ class ManageSubscriptions extends Maintenance {
 			}
 		}
 		if ( $modeDelete ) {
-			// TODO
+			$url = $this->getOption( 'delete' );
+			$client = new SubscriberClient( $url );
+			try {
+				$client->unsubscribe();
+			} catch ( PubSubHubbubException $e ) {
+				echo "Error occurred: " . PHP_EOL . $e->getMessage() . PHP_EOL;
+			}
 		}
 	}
 }
