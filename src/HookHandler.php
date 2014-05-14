@@ -8,8 +8,12 @@ use XMLReader;
 class HookHandler {
 
 	/**
+	 * Called when MediaWiki is updated to allow extensions to update the database.
+	 *
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/LoadExtensionSchemaUpdates
+	 *
 	 * @codeCoverageIgnore
-	 * @param DatabaseUpdater $updater
+	 * @param DatabaseUpdater $updater The updater to use.
 	 * @return bool
 	 */
 	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
@@ -23,7 +27,6 @@ class HookHandler {
 
 	/**
 	 * Called when building a list of files with PHPUnit tests.
-	 * Add our tests to the list of PHPUnit test files.
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/UnitTestsList
 	 *

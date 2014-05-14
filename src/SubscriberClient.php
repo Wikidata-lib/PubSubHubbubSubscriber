@@ -2,27 +2,51 @@
 
 namespace PubSubHubbubSubscriber;
 
-use Http;
 use MWHttpRequest;
 
 class SubscriberClient {
 
+	/**
+	 * @var string $mResourceURL
+	 */
 	private $mResourceURL;
+
+	/**
+	 * @var string $mHubURL
+	 */
+	private $mHubURL;
 
 	public function __construct( $resourceURL ) {
 		$this->mResourceURL = $resourceURL;
 	}
 
-	public function subscribe() {
-		$rawLinkHeaders = self::findRawLinkHeaders( $this->mResourceURL );
+	function retrieveLinkHeaders() {
+		$rawLinkHeaders = $this->findRawLinkHeaders( $this->mResourceURL );
 		$linkHeaders = self::parseLinkHeaders( $rawLinkHeaders );
-		$hubURL = $linkHeaders['hub'];
+		$this->mHubURL = $linkHeaders['hub'];
 		$this->mResourceURL = $linkHeaders['self'];
+	}
+
+	public function subscribe() {
+		$this->retrieveLinkHeaders();
 
 		$subscription = new Subscription( NULL, $this->mResourceURL );
 		$subscription->update();
 
-		self::sendSubscriptionRequest( $hubURL, $this->mResourceURL );
+		$this->sendRequest( 'subscribe', $this->mHubURL, $this->mResourceURL );
+	}
+
+	public function unsubscribe() {
+		$this->retrieveLinkHeaders();
+
+		$subscription = Subscription::findByTopic( $this->mResourceURL );
+		if ( !$subscription ) {
+			// TODO: Error handling
+		}
+		$subscription->setUnsubscribed( true );
+		$subscription->update();
+
+		$this->sendRequest( 'unsubscribe', $this->mHubURL, $this->mResourceURL );
 	}
 
 	/**
@@ -31,13 +55,27 @@ class SubscriberClient {
 	 * @param string $resourceURL The resource's URL.
 	 * @return string[] an indexed array containing values of all HTTP Link headers.
 	 */
-	private static function findRawLinkHeaders( $resourceURL ) {
-		$req = MWHttpRequest::factory( $resourceURL, array(
-			'method' => 'HEAD',
-		) );
+	function findRawLinkHeaders( $resourceURL ) {
+		$req = $this->createHttpRequest( 'HEAD', $resourceURL );
 		$req->execute();
 		$rawLinkHeaders = $req->getResponseHeaders();
 		return $rawLinkHeaders['link'];
+	}
+
+	/**
+	 * @param string $method
+	 * @param string $url
+	 * @param string[] $postData
+	 * @return MWHttpRequest
+	 */
+	function createHttpRequest( $method, $url, $postData = NULL ) {
+		$options = array(
+			'method' => $method,
+		);
+		if ( $postData !== NULL ) {
+			$options['postData'] = $postData;
+		}
+		return MWHttpRequest::factory( $url, $options );
 	}
 
 	/**
@@ -57,19 +95,35 @@ class SubscriberClient {
 		return $linkHeaders;
 	}
 
-	private static function sendSubscriptionRequest( $hubURL, $resourceURL ) {
+	/**
+	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
+	 * @param string $hubURL
+	 * @param string $resourceURL
+	 */
+	function sendRequest( $mode, $hubURL, $resourceURL ) {
 		$callbackURL = self::createCallbackURL( $resourceURL );
+		$postData = $this->createPostData( $mode, $resourceURL, $callbackURL );
 
-		Http::post( $hubURL, array(
-			'postData' => array(
-				'hub.callback' => $callbackURL,
-				'hub.mode' => 'subscribe',
-				'hub.verify' => 'async',
-				'hub.topic' => $resourceURL,
-				#'hub.secret' => "", // TODO
-			)
-		) );
+		$request = $this->createHttpRequest( 'POST', $hubURL, $postData );
+		$request->execute();
 		// TODO: Check for errors.
+	}
+
+	/**
+	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
+	 * @param string $resourceURL
+	 * @param string $callbackURL
+	 * @return string[]
+	 */
+	function createPostData( $mode, $resourceURL, $callbackURL ) {
+		$data = array(
+			'hub.callback' => $callbackURL,
+			'hub.mode' => $mode,
+			'hub.verify' => 'async',
+			'hub.topic' => $resourceURL,
+		);
+		#$data['hub.secret'] = ""; // TODO
+		return $data;
 	}
 
 	public static function createCallbackURL( $resourceURL ) {

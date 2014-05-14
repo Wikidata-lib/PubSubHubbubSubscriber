@@ -13,19 +13,19 @@ class ApiSubscription extends ApiBase {
 		$challenge = $params['hub.challenge'];
 
 		$success = false;
-		$handler = new SubscriptionHandler();
+		$handler = $this->createSubscriptionHandler();
 
 		switch ( $params['hub.mode'] ) {
 			case 'push':
 				if ( !$this->getRequest()->wasPosted() ) {
 					$this->dieUsage( 'push mode requires POST request', 'post_required', 400 );
-				}
+				} // @codeCoverageIgnore
 				$challenge = "";
 
 				$success = $handler->handlePush();
 				break;
 			case 'subscribe':
-				$success = $handler->handleSubscribe( $params['hub.topic'] );
+				$success = $handler->handleSubscribe( $params['hub.topic'], (int) $params['hub.lease_seconds'] );
 				break;
 			case 'unsubscribe':
 				$success = $handler->handleUnsubscribe( $params['hub.topic'] );
@@ -37,6 +37,14 @@ class ApiSubscription extends ApiBase {
 		} else {
 			$this->declineRequest();
 		}
+	}
+
+	/**
+	 * @codeCoverageIgnore
+	 * @return SubscriptionHandler
+	 */
+	function createSubscriptionHandler() {
+		return new SubscriptionHandler();
 	}
 
 	/**
@@ -112,8 +120,10 @@ class ApiSubscription extends ApiBase {
 	}
 
 	/**
+	 * Returns the description for this API module.
+	 *
 	 * @codeCoverageIgnore
-	 * @return string the API module's description.
+	 * @return string the description for this API module.
 	 */
 	public function getDescription() {
 		return "API module to handle requests from the PubSubHubbub hub.";
