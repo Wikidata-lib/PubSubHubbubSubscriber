@@ -41,11 +41,10 @@ class HookHandler {
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ImportHandleToplevelXMLTag
 	 *
-	 * @codeCoverageIgnore
 	 * @param XMLReader $reader
 	 * @return bool
 	 */
-	public static function onImportHandleToplevelXMLTag(  XMLReader $reader ) {
+	public static function onImportHandleToplevelXMLTag( XMLReader $reader ) {
 		$tag = $reader->name;
 		if ( $tag != 'deletion' ) {
 			return true;

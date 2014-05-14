@@ -1,8 +1,6 @@
 <?php
 
-
 namespace PubSubHubbubSubscriber;
-
 
 use ContentHandler;
 use ImportStringSource;
@@ -18,11 +16,11 @@ use XMLReader;
 /**
  * @covers PubSubHubbubSubscriber\DeletionXMLImporter
  *
+ * @group Database
  * @group PubSubHubbubSubscriber
- *  @group Database
  *
  * @licence GNU GPL v2+
- * @author Sebastian Brückner < sebastian.brueckner@student.hpi.uni-potsdam.de >
+ * @author Alexander Lehmann < alexander.lehmann@student.hpi.uni-potsdam.de >
  */
 class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 
@@ -69,11 +67,10 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 	 * @param string $comment
 	 */
 	private function insertWikipage( $titleName, $contentText, $comment ) {
-		$dbw = wfGetDB( DB_MASTER );
 		$page = WikiPage::factory( Title::newFromText( $titleName ) );
 
 		if ( !$page->exists() ) {
-			$pageId = $page->insertOn( $dbw );
+			$pageId = $page->insertOn( $this->db );
 		} else {
 			$pageId = $page->getId();
 		}
@@ -91,8 +88,8 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 			'timestamp' => wfTimestamp( TS_ISO_8601 ),
 			'minor_edit' => false,
 		) );
-		$revision->insertOn( $dbw );
-		$changed = $page->updateIfNewerOn( $dbw, $revision );
+		$revision->insertOn( $this->db );
+		$changed = $page->updateIfNewerOn( $this->db, $revision );
 
 		if ( $changed !== false ) {
 			$page->doEditUpdates( $revision, $user );
@@ -125,7 +122,8 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 	public function testParseContributor() {
 		$importer = $this->newDeletionXMLImporter( $this->getContributorXML() );
 		$logInfo = $importer->parseContributor();
-		$this->assertTrue( $logInfo['id'] == 1 && $logInfo['username'] == 'TestUser' );
+		$this->assertEquals( 1, $logInfo['id'] );
+		$this->assertEquals( 'TestUser', $logInfo['username'] );
 	}
 
 	/**
@@ -141,7 +139,7 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		$this->addData();
 		$importer = $this->newDeletionXMLImporter( $this->getCompleteDeletionXML() );
 		$importer->doDeletion( $this->getExpectedLogInfo() );
-		$this->wikipageExistsTest();
+		$this->assertWikiPageExists();
 	}
 
 	/**
@@ -152,13 +150,13 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		$this->addData();
 		$importer = $this->newDeletionXMLImporter( $this->getCompleteDeletionXML() );
 		$importer->doImport();
-		$this->wikipageExistsTest();
+		$this->assertWikiPageExists();
 	}
 
-	private function  wikipageExistsTest() {
+	private function  assertWikiPageExists() {
 		$title = Title::newFromText( 'TestPage' );
-		$wikipage = new WikiPage( $title );
-		$this->assertFalse( $wikipage->exists() );
+		$wikiPage = new WikiPage( $title );
+		$this->assertFalse( $wikiPage->exists() );
 	}
 
 	private function getExpectedLogInfo() {
@@ -234,5 +232,5 @@ EOF;
 	private function  getXMLNode() {
 		return '<id>1</id>';
 	}
+
 }
- 

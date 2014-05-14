@@ -1,6 +1,5 @@
 <?php
 
-
 namespace PubSubHubbubSubscriber;
 
 use Title;
@@ -10,17 +9,17 @@ use XMLReader;
 
 class DeletionXMLImporter {
 
-	private $reader = null;
+	private $mReader = null;
 
 	public function __construct( XMLReader $reader ) {
-		$this->reader = $reader;
+		$this->mReader = $reader;
 	}
 
 	public function doImport() {
 		$logInfo = null;
-		while ( $this->reader->read() ) {
-			$tag = $this->reader->name;
-			$type = $this->reader->nodeType;
+		while ( $this->mReader->read() ) {
+			$tag = $this->mReader->name;
+			$type = $this->mReader->nodeType;
 
 			if ( $tag == 'deletion' && $type == XmlReader::END_ELEMENT ) {
 				break;
@@ -41,15 +40,14 @@ class DeletionXMLImporter {
 
 	function parseLogItem() {
 		$logInfo = array();
-		$normalFields = array( 'id', 'comment', 'type', 'action', 'timestamp',
-			'logtitle', 'params' );
+		$normalFields = array( 'id', 'comment', 'type', 'action', 'timestamp', 'logtitle', 'params' );
 
-		while ( $this->reader->read()) {
-			$tag = $this->reader->name;
-			$type = $this->reader->nodeType;
+		while ( $this->mReader->read() ) {
+			$tag = $this->mReader->name;
+			$type = $this->mReader->nodeType;
 			if ( $tag == 'logitem' && $type == XmlReader::END_ELEMENT ) {
 				break;
-			}elseif ( in_array( $tag, $normalFields ) ) {
+			} elseif ( in_array( $tag, $normalFields ) ) {
 				$logInfo[$tag] = $this->nodeContents();
 			} elseif ( $tag == 'contributor' ) {
 				$logInfo['contributor'] = $this->parseContributor();
@@ -64,9 +62,9 @@ class DeletionXMLImporter {
 		$fields = array( 'id', 'ip', 'username' );
 		$info = array();
 
-		while ( $this->reader->read() ) {
-			$tag = $this->reader->name;
-			$type = $this->reader->nodeType;
+		while ( $this->mReader->read() ) {
+			$tag = $this->mReader->name;
+			$type = $this->mReader->nodeType;
 			if ( $tag == 'contributor' && $type == XmlReader::END_ELEMENT ) {
 				break;
 			}
@@ -91,22 +89,22 @@ class DeletionXMLImporter {
 	}
 
 	function nodeContents() {
-		if ( $this->reader->isEmptyElement ) {
+		if ( $this->mReader->isEmptyElement ) {
 			return "";
 		}
 		$buffer = "";
-		while ( $this->reader->read() ) {
-			switch ( $this->reader->nodeType ) {
+		while ( $this->mReader->read() ) {
+			switch ( $this->mReader->nodeType ) {
 				case XmlReader::TEXT:
 				case XmlReader::SIGNIFICANT_WHITESPACE:
-					$buffer .= $this->reader->value;
+					$buffer .= $this->mReader->value;
 					break;
 				case XmlReader::END_ELEMENT:
 					return $buffer;
 			}
 		}
 
-		$this->reader->close();
+		$this->mReader->close();
 		return '';
 	}
 }
