@@ -17,6 +17,7 @@ class DeletionXMLImporter {
 	}
 
 	public function doImport() {
+		$logInfo = null;
 		while ( $this->reader->read()) {
 			$tag = $this->reader->name;
 			$type = $this->reader->nodeType;
@@ -24,19 +25,21 @@ class DeletionXMLImporter {
 			if ( $tag == 'deletion' && $type == XmlReader::END_ELEMENT ) {
 				break;
 			} elseif ( $tag == 'logitem' ) {
-				$loginfo = $this->parseLogItem();
+				$logInfo = $this->parseLogItem();
 			} elseif ( $tag != '#text' ) {
 				$this->warn( "Unhandled deletion XML tag $tag" );
 			}
 		}
-		$this->doDeletion( $loginfo );
+		if ( isset( $logInfo ) ) {
+			$this->doDeletion( $logInfo );
+		}
 	}
 
 	private function warn( $data ) {
 		wfDebug( "DeletionXMLImporter: $data\n" );
 	}
 
-	private function parseLogItem() {
+	function parseLogItem() {
 		$logInfo = array();
 		$normalFields = array( 'id', 'comment', 'type', 'action', 'timestamp',
 			'logtitle', 'params' );
@@ -57,7 +60,7 @@ class DeletionXMLImporter {
 		return $logInfo;
 	}
 
-	private function parseContributor() {
+	function parseContributor() {
 		$fields = array( 'id', 'ip', 'username' );
 		$info = array();
 
@@ -74,7 +77,7 @@ class DeletionXMLImporter {
 		return $info;
 	}
 
-	private function doDeletion( $logInfo ) {
+	function doDeletion( $logInfo ) {
 		if ( isset(  $logInfo['contributor']['username'] ) ) {
 			$user = User::newFromName( $logInfo['contributor']['username'] );
 		}
@@ -87,7 +90,7 @@ class DeletionXMLImporter {
 		$wikipage->doDeleteArticle( $logInfo['comment'], false, 0, true, $error, $user );
 	}
 
-	private function nodeContents() {
+	function nodeContents() {
 		if ( $this->reader->isEmptyElement ) {
 			return "";
 		}
