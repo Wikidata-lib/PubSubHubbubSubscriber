@@ -58,4 +58,6 @@ $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
 
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'PubSubHubbubSubscriber\\HookHandler::onLoadExtensionSchemaUpdates';
 $wgHooks['UnitTestsList'][] = 'PubSubHubbubSubscriber\\HookHandler::onUnitTestsList';
-$wgHooks['ImportHandleToplevelXMLTag'][] = 'PubSubHubbubSubscriber\\HookHandler::onImportHandleToplevelXMLTag';
+// Disabled until changeset 133064 is accepted into MediaWiki core:
+// https://gerrit.wikimedia.org/r/133064
+//$wgHooks['ImportHandleToplevelXMLTag'][] = 'PubSubHubbubSubscriber\\HookHandler::onImportHandleToplevelXMLTag';
