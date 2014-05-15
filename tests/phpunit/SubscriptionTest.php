@@ -61,6 +61,15 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 			$expectedData );
 	}
 
+	public function testGetAll() {
+		$subscriptions = Subscription::getAll();
+		$this->assertTrue( is_array( $subscriptions ) );
+		// See setUp().
+		$this->assertEquals( 2, count( $subscriptions ) );
+		$this->assertEquals( 'topic1', $subscriptions[0]->getTopic() );
+		$this->assertEquals( 'topic2', $subscriptions[1]->getTopic() );
+	}
+
 	public function testSubscriptionFindNothingByID() {
 		$subscription = Subscription::findByID( 1000 );
 		$this->assertNull( $subscription );

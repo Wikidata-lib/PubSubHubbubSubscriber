@@ -79,7 +79,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$this->assertTrue( $success );
 		$subscription = Subscription::findByTopic( "http://another.topic/" );
 		$this->assertTrue( $subscription->isConfirmed() );
-		$this->assertEquals( $_SERVER['REQUEST_TIME'] + 21, $subscription->getExpires() );
+		$this->assertEquals( $_SERVER['REQUEST_TIME'] + 21, $subscription->getExpires()->getTimestamp( TS_UNIX ) );
 	}
 
 	public function testHandleUnsubscribeNonExistent() {

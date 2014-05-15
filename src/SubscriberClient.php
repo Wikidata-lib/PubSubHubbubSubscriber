@@ -23,6 +23,9 @@ class SubscriberClient {
 	function retrieveLinkHeaders() {
 		$rawLinkHeaders = $this->findRawLinkHeaders( $this->mResourceURL );
 		$linkHeaders = self::parseLinkHeaders( $rawLinkHeaders );
+		if ( !array_key_exists( 'hub', $linkHeaders ) || !array_key_exists( 'self', $linkHeaders ) ) {
+			throw new PubSubHubbubException( "The resource is not PubSubHubbub-enabled!" );
+		}
 		$this->mHubURL = $linkHeaders['hub'];
 		$this->mResourceURL = $linkHeaders['self'];
 	}
@@ -41,7 +44,7 @@ class SubscriberClient {
 
 		$subscription = Subscription::findByTopic( $this->mResourceURL );
 		if ( !$subscription ) {
-			// TODO: Error handling
+			throw new PubSubHubbubException( "There is no active subscription for the specified resource!" );
 		}
 		$subscription->setUnsubscribed( true );
 		$subscription->update();
@@ -59,7 +62,10 @@ class SubscriberClient {
 		$req = $this->createHttpRequest( 'HEAD', $resourceURL );
 		$req->execute();
 		$rawLinkHeaders = $req->getResponseHeaders();
-		return $rawLinkHeaders['link'];
+		if ( array_key_exists( 'link', $rawLinkHeaders ) ) {
+			return $rawLinkHeaders['link'];
+		}
+		return array();
 	}
 
 	/**
