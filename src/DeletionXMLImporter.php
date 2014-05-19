@@ -4,15 +4,18 @@ namespace PubSubHubbubSubscriber;
 
 use Title;
 use User;
+use WikiImporter;
 use WikiPage;
 use XMLReader;
 
 class DeletionXMLImporter {
 
 	private $mReader = null;
+	private $mImporter = null;
 
-	public function __construct( XMLReader $reader ) {
-		$this->mReader = $reader;
+	public function __construct( WikiImporter $importer ) {
+		$this->mImporter = $importer;
+		$this->mReader = $importer->getReader();
 	}
 
 	public function doImport() {
@@ -26,16 +29,12 @@ class DeletionXMLImporter {
 			} elseif ( $tag == 'logitem' ) {
 				$logInfo = $this->parseLogItem();
 			} elseif ( $tag != '#text' ) {
-				$this->warn( "Unhandled deletion XML tag $tag" );
+				$this->mImporter->warn( "Unhandled deletion XML tag $tag" );
 			}
 		}
 		if ( isset( $logInfo ) ) {
 			$this->doDeletion( $logInfo );
 		}
-	}
-
-	private function warn( $data ) {
-		wfDebug( "DeletionXMLImporter: $data\n" );
 	}
 
 	function parseLogItem() {
@@ -48,11 +47,11 @@ class DeletionXMLImporter {
 			if ( $tag == 'logitem' && $type == XmlReader::END_ELEMENT ) {
 				break;
 			} elseif ( in_array( $tag, $normalFields ) ) {
-				$logInfo[$tag] = $this->nodeContents();
+				$logInfo[$tag] = $this->mImporter->nodeContents();
 			} elseif ( $tag == 'contributor' ) {
 				$logInfo['contributor'] = $this->parseContributor();
 			} elseif ( $tag != '#text' ) {
-				$this->warn( "Unhandled log-item XML tag $tag" );
+				$this->mImporter->warn( "Unhandled log-item XML tag $tag" );
 			}
 		}
 		return $logInfo;
@@ -67,9 +66,8 @@ class DeletionXMLImporter {
 			$type = $this->mReader->nodeType;
 			if ( $tag == 'contributor' && $type == XmlReader::END_ELEMENT ) {
 				break;
-			}
-			if ( in_array( $tag, $fields ) ) {
-				$info[$tag] = $this->nodeContents();
+			} elseif ( in_array( $tag, $fields ) ) {
+				$info[$tag] = $this->mImporter->nodeContents();
 			}
 		}
 		return $info;
@@ -86,25 +84,5 @@ class DeletionXMLImporter {
 		$title = Title::newFromText( $logInfo['logtitle'] );
 		$wikipage = new WikiPage( $title );
 		$wikipage->doDeleteArticle( $logInfo['comment'], false, 0, true, $error, $user );
-	}
-
-	function nodeContents() {
-		if ( $this->mReader->isEmptyElement ) {
-			return "";
-		}
-		$buffer = "";
-		while ( $this->mReader->read() ) {
-			switch ( $this->mReader->nodeType ) {
-				case XmlReader::TEXT:
-				case XmlReader::SIGNIFICANT_WHITESPACE:
-					$buffer .= $this->mReader->value;
-					break;
-				case XmlReader::END_ELEMENT:
-					return $buffer;
-			}
-		}
-
-		$this->mReader->close();
-		return '';
 	}
 }

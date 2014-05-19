@@ -3,7 +3,7 @@
 namespace PubSubHubbubSubscriber;
 
 use DatabaseUpdater;
-use XMLReader;
+use WikiImporter;
 
 class HookHandler {
 
@@ -44,16 +44,16 @@ class HookHandler {
 	 *
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ImportHandleToplevelXMLTag
 	 *
-	 * @param XMLReader $reader
+	 * @param WikiImporter $reader
 	 * @return bool
 	 */
-	public static function onImportHandleToplevelXMLTag( XMLReader $reader ) {
-		$tag = $reader->name;
+	public static function onImportHandleToplevelXMLTag( WikiImporter $importer ) {
+		$tag = $importer->getReader()->name;
 		if ( $tag != 'deletion' ) {
 			return true;
 		}
-		$importer = new DeletionXMLImporter( $reader );
-		$importer->doImport();
+		$deletionImporter = new DeletionXMLImporter( $importer );
+		$deletionImporter->doImport();
 		return false;
 	}
 

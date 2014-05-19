@@ -4,14 +4,12 @@ namespace PubSubHubbubSubscriber;
 
 use ContentHandler;
 use ImportStringSource;
-use Language;
 use MediaWikiLangTestCase;
 use Revision;
 use Title;
-use UploadSourceAdapter;
 use User;
+use WikiImporter;
 use WikiPage;
-use XMLReader;
 
 /**
  * @covers PubSubHubbubSubscriber\DeletionXMLImporter
@@ -26,26 +24,16 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
-		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
-		) );
-		stream_wrapper_register( 'uploadsource', 'UploadSourceAdapter' );
 	}
 
 	protected function tearDown() {
-		stream_wrapper_unregister( 'uploadsource' );
 		parent::tearDown();
 	}
 
 	protected function newDeletionXMLImporter( $XMLString ) {
-		$reader = new XMLReader();
 		$source = new ImportStringSource( $XMLString );
-		$id = UploadSourceAdapter::registerSource( $source );
-		$reader->open( "uploadsource://$id" );
-		$reader->read();
-
-		return new DeletionXMLImporter( $reader );
+		$wikiImporter = new WikiImporter( $source );
+		return new DeletionXMLImporter( $wikiImporter );
 	}
 
 	public function addData() {
@@ -104,26 +92,12 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		return ContentHandler::getForTitle( $title )->getDefaultFormat();
 	}
 
-	function testNodeContentsEmpty() {
-		$importer = $this->newDeletionXMLImporter( $this->getEmptyXMLNode() );
-		$content = $importer->nodeContents();
-		$this->assertEquals( '', $content );
-	}
-
-	function testNodeContents() {
-		$importer = $this->newDeletionXMLImporter( $this->getXMLNode() );
-		$content = $importer->nodeContents();
-		$this->assertEquals( '1', $content );
-	}
-
-	/**
-	 * @depends testNodeContents
-	 */
 	public function testParseContributor() {
 		$importer = $this->newDeletionXMLImporter( $this->getContributorXML() );
 		$logInfo = $importer->parseContributor();
 		$this->assertEquals( 1, $logInfo['id'] );
 		$this->assertEquals( 'TestUser', $logInfo['username'] );
+		unset( $importer );
 	}
 
 	/**
@@ -133,6 +107,7 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		$importer = $this->newDeletionXMLImporter( $this->getLogitemXML() );
 		$actualLogInfo = $importer->parseLogItem();
 		$this->assertEquals( $actualLogInfo, $this->getExpectedLogInfo() );
+		unset( $importer );
 	}
 
 	public function testDoDeletion() {
@@ -140,6 +115,7 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		$importer = $this->newDeletionXMLImporter( $this->getCompleteDeletionXML() );
 		$importer->doDeletion( $this->getExpectedLogInfo() );
 		$this->assertWikiPageExists();
+		unset( $importer );
 	}
 
 	/**
@@ -151,6 +127,7 @@ class DeletionXMLImporterTest extends MediaWikiLangTestCase {
 		$importer = $this->newDeletionXMLImporter( $this->getCompleteDeletionXML() );
 		$importer->doImport();
 		$this->assertWikiPageExists();
+		unset( $importer );
 	}
 
 	private function  assertWikiPageExists() {
