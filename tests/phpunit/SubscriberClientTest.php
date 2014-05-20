@@ -15,6 +15,11 @@ use MediaWikiLangTestCase;
 class SubscriberClientTest extends MediaWikiLangTestCase {
 
 	/**
+	 * @var bool $mMockRequestSuccess
+	 */
+	private $mMockRequestSuccess;
+
+	/**
 	 * @var HttpMockRequest $mRequest
 	 */
 	private $mRequest;
@@ -35,7 +40,9 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		) );
 		$this->tablesUsed[] = 'push_subscriptions';
 
-		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient', array( 'createHttpRequest' ), array( "http://random.resource/" ) );
+		$this->mMockRequestSuccess = true;
+		$this->mClient = $this->getMock( 'PubSubHubbubSubscriber\\SubscriberClient',
+			array( 'createHttpRequest' ), array( "http://random.resource/" ) );
 		$this->mClient->expects( $this->any() )
 			->method( 'createHttpRequest' )
 			->withAnyParameters()
@@ -43,7 +50,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	}
 
 	public function mockCreateHttpRequest( $method, $hubURL, $postData ) {
-		$this->mRequest = new HttpMockRequest( $method, $hubURL, $postData );
+		$this->mRequest = new HttpMockRequest( $method, $hubURL, $postData, $this->mMockRequestSuccess );
 		return $this->mRequest;
 	}
 
@@ -58,10 +65,19 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	/**
 	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
 	 */
-	public function testRetrieveLinkHeaders() {
+	public function testRetrieveLinkHeadersSuccessful() {
 		$this->mClient->retrieveLinkHeaders();
 		$this->assertAttributeEquals( 'http://a.hub/', 'mHubURL', $this->mClient );
 		$this->assertAttributeEquals( 'http://random.resource/actual.link', 'mResourceURL', $this->mClient );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::retrieveLinkHeaders
+	 * @expectedException \PubSubHubbubSubscriber\PubSubHubbubException
+	 */
+	public function testRetrieveLinkHeadersUnsuccessful() {
+		$this->mMockRequestSuccess = false;
+		$this->mClient->retrieveLinkHeaders();
 	}
 
 	/**
@@ -96,6 +112,15 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->assertArrayEquals( array(
 			"<http://random.resource/actual.link>; rel=\"self\", <http://a.hub/>; rel=\"hub\"",
 		), $result );
+	}
+
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::findRawLinkHeaders
+	 */
+	public function testFindRawLinkHeadersUnsuccessful() {
+		$this->mMockRequestSuccess = false;
+		$result = $this->mClient->findRawLinkHeaders( "http://random.resource/" );
+		$this->assertArrayEquals( array(), $result );
 	}
 
 	/**
@@ -176,6 +201,14 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->assertTrue( $subscription->isUnsubscribed() );
 	}
 
+	/**
+	 * @covers PubSubHubbubSubscriber\SubscriberClient::unsubscribe
+	 * @expectedException \PubSubHubbubSubscriber\PubSubHubbubException
+	 */
+	public function testUnsubscribeWithoutSubscription() {
+		$this->mClient->unsubscribe();
+	}
+
 	public function getLinkHeaders() {
 		return array(
 			array(
@@ -233,22 +266,28 @@ class HttpMockRequest {
 	public $mMethod;
 	public $mHubURL;
 	public $mPostData;
+	private $mSuccess;
 
-	function __construct( $method, $hubURL, $postData ) {
+	function __construct( $method, $hubURL, $postData, $success ) {
 		$this->mMethod = $method;
 		$this->mHubURL = $hubURL;
 		$this->mPostData = $postData;
+		$this->mSuccess = $success;
 	}
 
 	public function execute() {
 	}
 
 	public function getResponseHeaders() {
-		return array(
-			"link" => array(
-				"<http://random.resource/actual.link>; rel=\"self\", <http://a.hub/>; rel=\"hub\"",
-			),
-		);
+		if ( $this->mSuccess ) {
+			return array(
+				"link" => array(
+					"<http://random.resource/actual.link>; rel=\"self\", <http://a.hub/>; rel=\"hub\"",
+				),
+			);
+		} else {
+			return array();
+		}
 	}
 
 }

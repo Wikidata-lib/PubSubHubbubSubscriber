@@ -4,6 +4,7 @@ namespace PubSubHubbubSubscriber;
 
 use ImportStreamSource;
 use User;
+use MWTimestamp;
 use WikiImporter;
 use WikiPage;
 use WikiRevision;
@@ -54,7 +55,7 @@ class SubscriptionHandler {
 
 		if ( $subscription && !$subscription->isConfirmed() ) {
 			$subscription->setConfirmed(true);
-			$subscription->setExpires( $_SERVER['REQUEST_TIME'] + $lease_seconds );
+			$subscription->setExpires( new MWTimestamp( $_SERVER['REQUEST_TIME'] + $lease_seconds ) );
 			$subscription->update();
 			return true;
 		} else {

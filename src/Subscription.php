@@ -2,6 +2,8 @@
 
 namespace PubSubHubbubSubscriber;
 
+use MWTimestamp;
+
 class Subscription {
 
 	/**
@@ -13,7 +15,7 @@ class Subscription {
 	 */
 	private $mTopic;
 	/**
-	 * @var null|int $mExpires
+	 * @var null|MWTimestamp $mExpires
 	 */
 	private $mExpires;
 	/**
@@ -28,15 +30,25 @@ class Subscription {
 	public function __construct( $id = NULL, $topic = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
 		$this->mId = $id;
 		$this->mTopic = $topic;
-		$this->mExpires = $expires === NULL ? NULL : (int) $expires;
+		$this->mExpires = $expires;
 		$this->mConfirmed = (bool) $confirmed;
 		$this->mUnsubscribe = (bool) $unsubscribe;
+	}
+
+	public static function createFromDBObject( $object ) {
+		return new self(
+			$object->psb_id,
+			$object->psb_topic,
+			$object->psb_expires === NULL ? NULL : new MWTimestamp( $object->psb_expires ),
+			(bool) $object->psb_confirmed,
+			(bool) $object->psb_unsubscribe
+		);
 	}
 
 	public static function findByID( $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_id' => $id ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -44,13 +56,7 @@ class Subscription {
 		}
 
 		$data = $result->fetchObject();
-		return new Subscription(
-			$id,
-			$data->psb_topic,
-			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
-			$data->psb_confirmed,
-			$data->psb_unsubscribe
-		);
+		return self::createFromDBObject( $data );
 	}
 
 	/**
@@ -62,7 +68,7 @@ class Subscription {
 	public static function findByTopic( $topicURL ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_id', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_topic' => $topicURL ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -70,13 +76,23 @@ class Subscription {
 		}
 
 		$data = $result->fetchObject();
-		return new Subscription(
-			$data->psb_id,
-			$topicURL,
-			$data->psb_expires === NULL ? NULL : wfTimestamp( TS_UNIX, $data->psb_expires ),
-			$data->psb_confirmed,
-			$data->psb_unsubscribe
-		);
+		return self::createFromDBObject( $data );
+	}
+
+	/**
+	 * @return Subscription[]
+	 */
+	public static function getAll() {
+		$dbr = wfGetDB( DB_SLAVE );
+		$result = $dbr->select( 'push_subscriptions',
+			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ) );
+
+		$subscriptions = array();
+
+		while ( ( $data = $result->fetchObject() ) !== false ) {
+			$subscriptions[] = self::createFromDBObject( $data );
+		}
+		return $subscriptions;
 	}
 
 	public function update() {
@@ -84,7 +100,8 @@ class Subscription {
 		if ( $this->mId ) {
 			$dbw->update( 'push_subscriptions',
 				array(
-					'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
+					'psb_expires' => $this->mExpires === NULL ? NULL
+						: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 					'psb_confirmed' => $this->mConfirmed,
 					'psb_unsubscribe' => $this->mUnsubscribe,
 				),
@@ -92,7 +109,8 @@ class Subscription {
 		} else {
 			$dbw->insert( 'push_subscriptions', array(
 				'psb_topic' => $this->mTopic,
-				'psb_expires' => $this->mExpires === NULL ? NULL : $dbw->timestamp( $this->mExpires ),
+				'psb_expires' => $this->mExpires === NULL ? NULL
+					: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 				'psb_confirmed' => $this->mConfirmed,
 				'psb_unsubscribe' => $this->mUnsubscribe,
 			) );
@@ -122,7 +140,7 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
-	 * @return int|null
+	 * @return MWTimestamp|null
 	 */
 	public function getExpires() {
 		return $this->mExpires;
@@ -130,10 +148,10 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
-	 * @param int $expires
+	 * @param MWTimestamp|null $expires
 	 */
 	public function setExpires( $expires ) {
-		$this->mExpires = (int) $expires;
+		$this->mExpires = $expires;
 	}
 
 	/**
