@@ -189,7 +189,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$resourceURL = "http://random.resource/actual.link";
 
 		// Create Subscription.
-		$subscription = new Subscription( NULL, $resourceURL, NULL, true, false );
+		$subscription = new Subscription( NULL, $resourceURL, 'secret', NULL, true, false );
 		$subscription->update();
 
 		// Unsubscribe it.

@@ -62,7 +62,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleSubscribeAlreadyConfirmed() {
-		$subscription = new Subscription( NULL, "http://topic/", NULL, true, false );
+		$subscription = new Subscription( NULL, "http://topic/", 'secret', NULL, true, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleSubscribe( "http://topic/", 42 );
@@ -72,7 +72,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleSubscribeSuccessful() {
-		$subscription = new Subscription( NULL, "http://another.topic/", NULL, false, false );
+		$subscription = new Subscription( NULL, "http://another.topic/", 'secret', NULL, false, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleSubscribe( "http://another.topic/", 21 );
@@ -88,7 +88,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleUnsubscribeNotMarkedForUnsubscription() {
-		$subscription = new Subscription( NULL, "http://topic/", NULL, true, false );
+		$subscription = new Subscription( NULL, "http://topic/", 'secret', NULL, true, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleUnsubscribe( "http://topic/" );
@@ -98,7 +98,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleUnsubscribeSuccessful() {
-		$subscription = new Subscription( NULL, "http://another.topic/", NULL, true, true );
+		$subscription = new Subscription( NULL, "http://another.topic/", 'secret', NULL, true, true );
 		$subscription->update();
 
 		$success = $this->mHandler->handleUnsubscribe( "http://another.topic/" );

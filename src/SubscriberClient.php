@@ -33,7 +33,8 @@ class SubscriberClient {
 	public function subscribe() {
 		$this->retrieveLinkHeaders();
 
-		$subscription = new Subscription( NULL, $this->mResourceURL );
+		// TODO: Add actual secret.
+		$subscription = new Subscription( NULL, $this->mResourceURL, 'secretTODO' );
 		$subscription->update();
 
 		$this->sendRequest( 'subscribe', $this->mHubURL, $this->mResourceURL );
