@@ -160,7 +160,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$this->assertEquals( $resourceURL, $postData['hub.topic'] );
 		$this->assertEquals( $callbackURL, $postData['hub.callback'] );
 		if ( $secret ) {
-			$this->assertEquals( $secret, $postData['hub.secret'] );
+			$this->assertEquals( bin2hex( $secret ), $postData['hub.secret'] );
 		} else {
 			$this->assertArrayNotHasKey( 'hub.secret', $postData );
 		}

@@ -33,11 +33,12 @@ class SubscriberClient {
 	public function subscribe() {
 		$this->retrieveLinkHeaders();
 
-		// TODO: Add actual secret.
-		$subscription = new Subscription( NULL, $this->mResourceURL, 'secretTODO' );
+		$secret = openssl_random_pseudo_bytes( Subscription::SECRET_LENGTH );
+
+		$subscription = new Subscription( NULL, $this->mResourceURL, $secret );
 		$subscription->update();
 
-		$this->sendRequest( 'subscribe', $this->mHubURL, $this->mResourceURL );
+		$this->sendRequest( 'subscribe', $this->mHubURL, $this->mResourceURL, $secret );
 	}
 
 	public function unsubscribe() {
@@ -132,7 +133,7 @@ class SubscriberClient {
 			'hub.topic' => $resourceURL,
 		);
 		if ( $secret ) {
-			$data['hub.secret'] = $secret;
+			$data['hub.secret'] = bin2hex( $secret );
 		}
 		return $data;
 	}

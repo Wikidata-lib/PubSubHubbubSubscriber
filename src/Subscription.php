@@ -31,6 +31,8 @@ class Subscription {
 	 */
 	private $mUnsubscribe;
 
+	const SECRET_LENGTH = 32;
+
 	public function __construct( $id = NULL, $topic = NULL, $secret = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
 		$this->mId = $id;
 		$this->mTopic = $topic;
