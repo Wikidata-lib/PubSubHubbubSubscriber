@@ -106,10 +106,11 @@ class SubscriberClient {
 	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
 	 * @param string $hubURL
 	 * @param string $resourceURL
+	 * @param string $secret
 	 */
-	function sendRequest( $mode, $hubURL, $resourceURL ) {
+	function sendRequest( $mode, $hubURL, $resourceURL, $secret = NULL ) {
 		$callbackURL = self::createCallbackURL( $resourceURL );
-		$postData = $this->createPostData( $mode, $resourceURL, $callbackURL );
+		$postData = $this->createPostData( $mode, $resourceURL, $callbackURL, $secret );
 
 		$request = $this->createHttpRequest( 'POST', $hubURL, $postData );
 		$request->execute();
@@ -120,16 +121,19 @@ class SubscriberClient {
 	 * @param string $mode The action to perform. Must be either 'subscribe' or 'unsubscribe'.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
+	 * @param string|null $secret
 	 * @return string[]
 	 */
-	function createPostData( $mode, $resourceURL, $callbackURL ) {
+	function createPostData( $mode, $resourceURL, $callbackURL, $secret = NULL ) {
 		$data = array(
 			'hub.callback' => $callbackURL,
 			'hub.mode' => $mode,
 			'hub.verify' => 'async',
 			'hub.topic' => $resourceURL,
 		);
-		#$data['hub.secret'] = ""; // TODO
+		if ( $secret ) {
+			$data['hub.secret'] = $secret;
+		}
 		return $data;
 	}
 
