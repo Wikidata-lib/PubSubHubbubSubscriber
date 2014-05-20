@@ -38,23 +38,4 @@ class HookHandler {
 		$files = array_merge( $files, glob( __DIR__ . '/../tests/phpunit/*Test.php' ) );
 		return true;
 	}
-
-	/**
-	 * Called when parsing a top level XML tag.
-	 *
-	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/ImportHandleToplevelXMLTag
-	 *
-	 * @param WikiImporter $reader
-	 * @return bool
-	 */
-	public static function onImportHandleToplevelXMLTag( WikiImporter $importer ) {
-		$tag = $importer->getReader()->name;
-		if ( $tag != 'deletion' ) {
-			return true;
-		}
-		$deletionImporter = new DeletionXMLImporter( $importer );
-		$deletionImporter->doImport();
-		return false;
-	}
-
 }

@@ -3,7 +3,10 @@
 namespace PubSubHubbubSubscriber;
 
 use ImportStreamSource;
+use User;
 use WikiImporter;
+use WikiPage;
+use WikiRevision;
 
 class SubscriptionHandler {
 
@@ -16,11 +19,29 @@ class SubscriptionHandler {
 		$source = ImportStreamSource::newFromFile( $file );
 		if ( $source->isGood() ) {
 			$importer = new WikiImporter( $source->value );
+			$importer->setLogItemCallback( array( &$this, 'deletionPage' ) );
 			$importer->doImport();
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	public function deletionPage( WikiRevision $revision ) {
+		if ( $revision->getAction() != 'delete' ){
+			return;
+		}
+		$username = $revision->getUser();
+		if ( !empty( $username ) ) {
+			$user = User::newFromName( $username );
+		}
+		else {
+			$user = null;
+		}
+		$error = array();
+		$title = $revision->getTitle();
+		$wikipage = new WikiPage( $title );
+		$wikipage->doDeleteArticle( $revision->getComment(), false, 0, true, $error, $user );
 	}
 
 	/**
