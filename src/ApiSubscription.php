@@ -22,7 +22,7 @@ class ApiSubscription extends ApiBase {
 				} // @codeCoverageIgnore
 				$challenge = "";
 
-				$success = $handler->handlePush();
+				$success = $handler->handlePush( $params['hub.topic'] );
 				break;
 			case 'subscribe':
 				$success = $handler->handleSubscribe( $params['hub.topic'], (int) $params['hub.lease_seconds'] );

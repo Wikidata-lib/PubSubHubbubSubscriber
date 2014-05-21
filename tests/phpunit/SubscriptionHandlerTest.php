@@ -35,8 +35,24 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$this->mHandler = new SubscriptionHandler();
 	}
 
-	public function testHandlePushFail() {
-		$success = $this->mHandler->handlePush( "" );
+	public function testHandlePushFailNoSubscription() {
+		$success = $this->mHandler->handlePush( 'http://a.non-subscribed.topic/' );
+		$this->assertFalse( $success );
+	}
+
+	public function testHandlePushFailSubscriptionNotConfirmed() {
+		$subscription = new Subscription( NULL, 'http://some.topic/', 'secret' );
+		$subscription->update();
+
+		$success = $this->mHandler->handlePush( 'http://a.non-confirmed.topic/' );
+		$this->assertFalse( $success );
+	}
+
+	public function testHandlePushFailBadSource() {
+		$subscription = new Subscription( NULL, 'http://a.bad.topic/', 'secret', NULL, true );
+		$subscription->update();
+
+		$success = $this->mHandler->handlePush( 'http://a.bad.topic/', '' );
 		$this->assertFalse( $success );
 	}
 
@@ -45,12 +61,17 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	 * @param string $xml The XML dump to import.
 	 */
 	public function testHandlePushSuccessful( $xml ) {
+		$subscription = new Subscription( NULL, 'http://a.useful.topic/', 'secret', NULL, true );
+		$subscription->update();
+
 		$file = 'data:application/xml,' . $xml;
-		$this->mHandler->handlePush( $file );
+		$success = $this->mHandler->handlePush( 'http://a.useful.topic/', $file );
+		$this->assertTrue( $success );
 
 		$title = Title::newFromText( 'Unit Test Page' );
 		$page = WikiPage::factory( $title );
 		$revision = Revision::newFromPageId( $page->getId() );
+		$this->assertNotNull( $revision );
 		$this->assertEquals( "lg0sq0pjm7cngi77vxtmmeko4o7pho6", $revision->getSha1() );
 		$text = $revision->getContent()->getNativeData();
 		$this->assertEquals( "This is a Test Page.", $text );
