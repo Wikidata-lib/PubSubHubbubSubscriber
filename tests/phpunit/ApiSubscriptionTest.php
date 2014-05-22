@@ -61,7 +61,6 @@ class ApiSubscriptionTest extends MediaWikiLangTestCase {
 	 * @dataProvider getExecuteData
 	 */
 	public function testExecute( $mode, $method, $topic, $challenge, $success ) {
-
 		// Create mocked SubscriptionHandler.
 		$handler = $this->getMock( 'PubSubHubbubSubscriber\\SubscriptionHandler', array( $method ) );
 		$handler->expects( $this->once() )

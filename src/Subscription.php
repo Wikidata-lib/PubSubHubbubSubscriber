@@ -150,6 +150,14 @@ class Subscription {
 
 	/**
 	 * @codeCoverageIgnore
+	 * @return string
+	 */
+	public function getSecret() {
+		return $this->mSecret;
+	}
+
+	/**
+	 * @codeCoverageIgnore
 	 * @return MWTimestamp|null
 	 */
 	public function getExpires() {

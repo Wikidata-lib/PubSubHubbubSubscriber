@@ -10,16 +10,26 @@ class SubscriptionHandler {
 
 	/**
 	 * @param string $topic
+	 * @param string $hmacSignature
 	 * @param string $file The file to read the POST data from. Defaults to stdin.
 	 * @return bool whether the pushed data could be accepted.
 	 */
-	public function handlePush( $topic, $file = "php://input" ) {
-		// TODO: Check signature
-
+	public function handlePush( $topic, $hmacSignature, $file = "php://input" ) {
 		$subscription = Subscription::findByTopic( $topic );
 		if ( $subscription && $subscription->isConfirmed() ) {
 			$source = ImportStreamSource::newFromFile( $file );
 			if ( $source->isGood() ) {
+				// Strip 'sha1='.
+				$hmacSignature = substr( trim( $hmacSignature ), 5 );
+
+				$content = file_get_contents( $file );
+				$expectedSignature = hash_hmac( 'sha1', $content, bin2hex( $subscription->getSecret() ), false );
+
+				if ( $expectedSignature !== $hmacSignature ) {
+					wfDebug( '[PubSubHubbubSubscriber] HMAC signature not matching. Ignoring data.' . PHP_EOL );
+					return false;
+				}
+
 				$importer = new WikiImporter( $source->value );
 				$importer->doImport();
 				return true;
