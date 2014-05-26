@@ -19,10 +19,6 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
-		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
-		) );
 		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->insertTestData( NULL, 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, true, true );
