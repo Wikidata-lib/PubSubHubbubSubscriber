@@ -68,7 +68,14 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$file = 'data:application/xml,' . $xml;
 		$success = $this->mHandler->handlePush( 'http://a.useful.topic/',
 			'sha1=3da541559918a808c2402bba5012f6c60b27661c', $file );
-		$this->assertFalse( $success );
+		// Assert success - see specification.
+		$this->assertTrue( $success );
+
+		// Assert page still does not exist.
+		$title = Title::newFromText( 'Unit Test Page' );
+		$page = WikiPage::factory( $title );
+		$revision = Revision::newFromPageId( $page->getId() );
+		$this->assertNull( $revision );
 	}
 
 	/**

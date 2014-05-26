@@ -27,7 +27,8 @@ class SubscriptionHandler {
 
 				if ( $expectedSignature !== $hmacSignature ) {
 					wfDebug( '[PubSubHubbubSubscriber] HMAC signature not matching. Ignoring data.' . PHP_EOL );
-					return false;
+					// Still need to return success according to specification.
+					return true;
 				}
 
 				$importer = new WikiImporter( $source->value );
