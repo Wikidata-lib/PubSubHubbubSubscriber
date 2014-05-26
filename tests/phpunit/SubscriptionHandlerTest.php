@@ -26,10 +26,6 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
-		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
-		) );
 		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->mHandler = new SubscriptionHandler();

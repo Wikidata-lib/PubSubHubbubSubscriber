@@ -32,8 +32,6 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	protected function setUp() {
 		parent::setUp();
 		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
 			'wgServer' => "http://this.is.a.test.wiki",
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",

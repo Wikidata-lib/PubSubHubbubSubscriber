@@ -24,11 +24,6 @@ class ApiSubscriptionTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
-		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
-		) );
-
 		$this->mApi = new ApiSubscription( new ApiMain(), 'pushcallback' );
 	}
 
