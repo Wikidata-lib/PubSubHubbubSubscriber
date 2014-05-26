@@ -3,6 +3,7 @@
 namespace PubSubHubbubSubscriber;
 
 use ImportStreamSource;
+use Title;
 use User;
 use MWTimestamp;
 use WikiImporter;
@@ -10,6 +11,8 @@ use WikiPage;
 use WikiRevision;
 
 class SubscriptionHandler {
+
+	private $previousPageOutCallback;
 
 	/**
 	 * @param string $file The file to read the POST data from. Defaults to stdin.
@@ -21,6 +24,7 @@ class SubscriptionHandler {
 		if ( $source->isGood() ) {
 			$importer = new WikiImporter( $source->value );
 			$importer->setLogItemCallback( array( &$this, 'deletionPage' ) );
+			$this->previousPageOutCallback = $importer->setPageOutCallback( array( &$this, ' createRedirectPage' ) );
 			$importer->doImport();
 			return true;
 		} else {
@@ -43,6 +47,38 @@ class SubscriptionHandler {
 		$title = $revision->getTitle();
 		$wikipage = new WikiPage( $title );
 		$wikipage->doDeleteArticle( $revision->getComment(), false, 0, true, $error, $user );
+	}
+
+	private function callOriginalPageOutCallback( Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
+		if ( is_callable( $this->previousPageOutCallback) ) {
+			call_user_func_array( $this->previousPageOutCallback, func_get_args() );
+		}
+	}
+
+	public function createRedirectPage( Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
+		if ( !array_key_exists( 'redirect', $pageInfo ) ) {
+			$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
+			return;
+		}
+		$wikipage = new WikiPage( $title );
+		$redirectTitle = Title::newFromText( $pageInfo['redirect'] );
+		if ($redirectTitle->exists()){
+			$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
+			return;
+		}
+
+		$dbw = wfGetDB( DB_MASTER );
+		$pageId = $wikipage->getId();
+		$currentRevision = $wikipage->getRevision();
+		$contentRevision = $currentRevision->getPrevious();
+		$currentRevisionID = $currentRevision->getId();
+		$contentRevisionID = $contentRevision->getId();
+
+		$dbw->delete( 'revision', array( 'rev_id' => $currentRevisionID ) );
+		$dbw->update( 'page', array( 'page_latest' => $contentRevisionID ), array( 'page_id' => $pageId ) );
+		$title->moveTo( $redirectTitle );
+
+		$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
 	}
 
 	/**
