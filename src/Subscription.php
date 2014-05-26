@@ -15,6 +15,10 @@ class Subscription {
 	 */
 	private $mTopic;
 	/**
+	 * @var string $mSecret
+	 */
+	private $mSecret;
+	/**
 	 * @var null|MWTimestamp $mExpires
 	 */
 	private $mExpires;
@@ -27,9 +31,12 @@ class Subscription {
 	 */
 	private $mUnsubscribe;
 
-	public function __construct( $id = NULL, $topic = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
+	const SECRET_LENGTH = 32;
+
+	public function __construct( $id = NULL, $topic = NULL, $secret = NULL, $expires = NULL, $confirmed = false, $unsubscribe = false ) {
 		$this->mId = $id;
 		$this->mTopic = $topic;
+		$this->mSecret = $secret;
 		$this->mExpires = $expires;
 		$this->mConfirmed = (bool) $confirmed;
 		$this->mUnsubscribe = (bool) $unsubscribe;
@@ -39,6 +46,7 @@ class Subscription {
 		return new self(
 			$object->psb_id,
 			$object->psb_topic,
+			$object->psb_secret,
 			$object->psb_expires === NULL ? NULL : new MWTimestamp( $object->psb_expires ),
 			(bool) $object->psb_confirmed,
 			(bool) $object->psb_unsubscribe
@@ -48,7 +56,7 @@ class Subscription {
 	public static function findByID( $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_secret', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_id' => $id ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -68,7 +76,7 @@ class Subscription {
 	public static function findByTopic( $topicURL ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
+			array( 'psb_id', 'psb_topic', 'psb_secret', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ),
 			array( 'psb_topic' => $topicURL ) );
 
 		if ( $result->numRows() == 0 ) {
@@ -85,7 +93,7 @@ class Subscription {
 	public static function getAll() {
 		$dbr = wfGetDB( DB_SLAVE );
 		$result = $dbr->select( 'push_subscriptions',
-			array( 'psb_id', 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ) );
+			array( 'psb_id', 'psb_topic', 'psb_secret', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ) );
 
 		$subscriptions = array();
 
@@ -100,6 +108,7 @@ class Subscription {
 		if ( $this->mId ) {
 			$dbw->update( 'push_subscriptions',
 				array(
+					'psb_secret' => $this->mSecret,
 					'psb_expires' => $this->mExpires === NULL ? NULL
 						: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 					'psb_confirmed' => $this->mConfirmed,
@@ -109,6 +118,7 @@ class Subscription {
 		} else {
 			$dbw->insert( 'push_subscriptions', array(
 				'psb_topic' => $this->mTopic,
+				'psb_secret' => $this->mSecret,
 				'psb_expires' => $this->mExpires === NULL ? NULL
 					: $dbw->timestamp( $this->mExpires->getTimestamp( TS_MW ) ),
 				'psb_confirmed' => $this->mConfirmed,
@@ -136,6 +146,14 @@ class Subscription {
 	 */
 	public function getTopic() {
 		return $this->mTopic;
+	}
+
+	/**
+	 * @codeCoverageIgnore
+	 * @return string
+	 */
+	public function getSecret() {
+		return $this->mSecret;
 	}
 
 	/**

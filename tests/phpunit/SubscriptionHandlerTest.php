@@ -35,8 +35,24 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		$this->mHandler = new SubscriptionHandler();
 	}
 
-	public function testHandlePushFail() {
-		$success = $this->mHandler->handlePush( "" );
+	public function testHandlePushFailNoSubscription() {
+		$success = $this->mHandler->handlePush( 'http://a.non-subscribed.topic/', 'IrrelevantHMACSignature' );
+		$this->assertFalse( $success );
+	}
+
+	public function testHandlePushFailSubscriptionNotConfirmed() {
+		$subscription = new Subscription( NULL, 'http://some.topic/', 'secret' );
+		$subscription->update();
+
+		$success = $this->mHandler->handlePush( 'http://a.non-confirmed.topic/', 'IrrelevantHMACSignature' );
+		$this->assertFalse( $success );
+	}
+
+	public function testHandlePushFailBadSource() {
+		$subscription = new Subscription( NULL, 'http://a.bad.topic/', 'secret', NULL, true );
+		$subscription->update();
+
+		$success = $this->mHandler->handlePush( 'http://a.bad.topic/', 'IrrelevantHMACSignature', '' );
 		$this->assertFalse( $success );
 	}
 
@@ -44,13 +60,42 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	 * @dataProvider getXMLPushData
 	 * @param string $xml The XML dump to import.
 	 */
-	public function testHandlePushSuccessful( $xml ) {
+	public function testHandlePushFailBadSignature( $xml ) {
+		$secret = base64_decode( 'mcl2BC9+zc619Pxq0qTRhQOBaJFBQcQ5I+PhqA1t5X8=' );
+		$subscription = new Subscription( NULL, 'http://a.useful.topic/', $secret, NULL, true );
+		$subscription->update();
+
 		$file = 'data:application/xml,' . $xml;
-		$this->mHandler->handlePush( $file );
+		$success = $this->mHandler->handlePush( 'http://a.useful.topic/',
+			'sha1=3da541559918a808c2402bba5012f6c60b27661c', $file );
+		// Assert success - see specification.
+		$this->assertTrue( $success );
+
+		// Assert page still does not exist.
+		$title = Title::newFromText( 'Unit Test Page' );
+		$page = WikiPage::factory( $title );
+		$revision = Revision::newFromPageId( $page->getId() );
+		$this->assertNull( $revision );
+	}
+
+	/**
+	 * @dataProvider getXMLPushData
+	 * @param string $xml The XML dump to import.
+	 */
+	public function testHandlePushSuccessful( $xml ) {
+		$secret = base64_decode( 'kN9SimfZVUmtXegAXLGmWdvvbX9n+a5c1Wu+bHekHRE=' );
+		$subscription = new Subscription( NULL, 'http://a.useful.topic/', $secret, NULL, true );
+		$subscription->update();
+
+		$file = 'data:application/xml,' . $xml;
+		$success = $this->mHandler->handlePush( 'http://a.useful.topic/',
+			'sha1=a0a85efd850dfd33bff2dc5d02afb3b066a8c125', $file );
+		$this->assertTrue( $success );
 
 		$title = Title::newFromText( 'Unit Test Page' );
 		$page = WikiPage::factory( $title );
 		$revision = Revision::newFromPageId( $page->getId() );
+		$this->assertNotNull( $revision );
 		$this->assertEquals( "lg0sq0pjm7cngi77vxtmmeko4o7pho6", $revision->getSha1() );
 		$text = $revision->getContent()->getNativeData();
 		$this->assertEquals( "This is a Test Page.", $text );
@@ -62,7 +107,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleSubscribeAlreadyConfirmed() {
-		$subscription = new Subscription( NULL, "http://topic/", NULL, true, false );
+		$subscription = new Subscription( NULL, "http://topic/", 'secret', NULL, true, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleSubscribe( "http://topic/", 42 );
@@ -72,7 +117,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleSubscribeSuccessful() {
-		$subscription = new Subscription( NULL, "http://another.topic/", NULL, false, false );
+		$subscription = new Subscription( NULL, "http://another.topic/", 'secret', NULL, false, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleSubscribe( "http://another.topic/", 21 );
@@ -88,7 +133,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleUnsubscribeNotMarkedForUnsubscription() {
-		$subscription = new Subscription( NULL, "http://topic/", NULL, true, false );
+		$subscription = new Subscription( NULL, "http://topic/", 'secret', NULL, true, false );
 		$subscription->update();
 
 		$success = $this->mHandler->handleUnsubscribe( "http://topic/" );
@@ -98,7 +143,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	public function testHandleUnsubscribeSuccessful() {
-		$subscription = new Subscription( NULL, "http://another.topic/", NULL, true, true );
+		$subscription = new Subscription( NULL, "http://another.topic/", 'secret', NULL, true, true );
 		$subscription->update();
 
 		$success = $this->mHandler->handleUnsubscribe( "http://another.topic/" );
@@ -110,7 +155,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	public function getXMLPushData() {
 		return array(
 			array(
-				<<< EOF
+				str_replace( "\r", "", <<< EOF
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
 	<page>
 		<title>Unit Test Page</title>
@@ -131,6 +176,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	</page>
 </mediawiki>
 EOF
+				)
 			)
 		);
 	}
