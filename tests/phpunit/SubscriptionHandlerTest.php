@@ -46,7 +46,6 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	public function testHandlePushSuccessful( $xml ) {
 		$file = 'data:application/xml,' . $xml;
 		$this->mHandler->handlePush( $file );
-
 		$title = Title::newFromText( 'Unit Test Page' );
 		$page = WikiPage::factory( $title );
 		$revision = Revision::newFromPageId( $page->getId() );
@@ -286,3 +285,29 @@ EOF
 	}
 
 }
+
+/* 			array(
+			<<< EOF
+<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
+	<page>
+		<title>TestPage</title>
+		<ns>0</ns>
+		<id>5</id>
+		<redirect title="Redirect TestPage"/>
+		<revision>
+			<id>100</id>
+			<parentid>99</parentid>
+			<timestamp>2015-04-24T13:37:42Z</timestamp>
+			<contributor>
+				<ip>127.0.0.1</ip>
+			</contributor>
+			<text xml:space="preserve" bytes="20">This is a Test Page.</text>
+			<sha1>lg0sq0pjm7cngi77vxtmmeko4o7pho6</sha1>
+			<model>wikitext</model>
+			<format>text/x-wiki</format>
+		</revision>
+	</page>
+</mediawiki>
+EOF
+						)
+		); */

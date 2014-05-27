@@ -24,7 +24,7 @@ class SubscriptionHandler {
 		if ( $source->isGood() ) {
 			$importer = new WikiImporter( $source->value );
 			$importer->setLogItemCallback( array( &$this, 'deletionPage' ) );
-			$this->previousPageOutCallback = $importer->setPageOutCallback( array( &$this, ' createRedirectPage' ) );
+			$this->previousPageOutCallback = $importer->setPageOutCallback( array( &$this, 'createRedirectPage' ) );
 			$importer->doImport();
 			return true;
 		} else {
@@ -56,17 +56,19 @@ class SubscriptionHandler {
 	}
 
 	public function createRedirectPage( Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
-		if ( !array_key_exists( 'redirect', $pageInfo ) ) {
+		wfDebugLog('PubSubHubbubSubscriber', 'Start redirect Page');
+		if ( !array_key_exists( 'redirect', $pageInfo ) || $sucCount < 1 ) {
 			$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
 			return;
 		}
+		wfDebugLog('PubSubHubbubSubscriber', 'Is a redirect Page');
 		$wikipage = new WikiPage( $title );
 		$redirectTitle = Title::newFromText( $pageInfo['redirect'] );
-		if ($redirectTitle->exists()){
+		if ( $redirectTitle->exists() ){
 			$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
 			return;
 		}
-
+		wfDebugLog('PubSubHubbubSubscriber', 'Init DB');
 		$dbw = wfGetDB( DB_MASTER );
 		$pageId = $wikipage->getId();
 		$currentRevision = $wikipage->getRevision();
@@ -74,8 +76,10 @@ class SubscriptionHandler {
 		$currentRevisionID = $currentRevision->getId();
 		$contentRevisionID = $contentRevision->getId();
 
+		wfDebugLog('PubSubHubbubSubscriber', 'Start DB');
 		$dbw->delete( 'revision', array( 'rev_id' => $currentRevisionID ) );
 		$dbw->update( 'page', array( 'page_latest' => $contentRevisionID ), array( 'page_id' => $pageId ) );
+		wfDebugLog('PubSubHubbubSubscriber', 'Move');
 		$title->moveTo( $redirectTitle );
 
 		$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
