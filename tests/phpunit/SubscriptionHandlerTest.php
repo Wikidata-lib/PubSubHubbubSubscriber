@@ -29,6 +29,9 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
+		global $wgContLang, $wgLanguageCode;
+		$wgContLang = Language::factory( 'en' );
+		$wgLanguageCode = 'en';
 		$this->tablesUsed[] = 'push_subscriptions';
 
 		$this->mHandler = new SubscriptionHandler();
@@ -40,12 +43,36 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	/**
+	 *
+	 */
+	public function testHandlePushRedirect() {
+		$this->addData();
+		sleep( 1 );
+		$xml = $this->getXMLPushRedirectData();
+
+		$file = 'data:application/xml,' . $xml;
+		$this->mHandler->handlePush( $file );
+
+		$orginalTitle = Title::newFromText( 'TestPage' );
+		$orginalPage = WikiPage::factory( $orginalTitle );
+
+		$redirectTitle = Title::newFromText( 'Redirect TestPage' );
+		$redirectPage = WikiPage::factory( $redirectTitle );
+
+		$this->assertTrue( $redirectPage->exists() );
+
+		$text = $orginalPage->getContent()->getNativeData();
+		$this->assertEquals( "This is a Test Page.", $text );
+	}
+
+	/**
 	 * @dataProvider getXMLPushData
 	 * @param string $xml The XML dump to import.
 	 */
 	public function testHandlePushSuccessful( $xml ) {
 		$file = 'data:application/xml,' . $xml;
 		$this->mHandler->handlePush( $file );
+
 		$title = Title::newFromText( 'Unit Test Page' );
 		$page = WikiPage::factory( $title );
 		$revision = Revision::newFromPageId( $page->getId() );
@@ -282,12 +309,10 @@ EOF
 EOF
 			)
 		);
-	}
-
 }
 
-/* 			array(
-			<<< EOF
+	public function getXMLPushRedirectData() {
+		$xml = <<< EOF
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
 	<page>
 		<title>TestPage</title>
@@ -297,17 +322,22 @@ EOF
 		<revision>
 			<id>100</id>
 			<parentid>99</parentid>
-			<timestamp>2015-04-24T13:37:42Z</timestamp>
+			<timestamp></timestamp>
 			<contributor>
 				<ip>127.0.0.1</ip>
 			</contributor>
-			<text xml:space="preserve" bytes="20">This is a Test Page.</text>
+			<text xml:space="preserve" bytes="31">#REDIRECT [[TestPage]]</text>
 			<sha1>lg0sq0pjm7cngi77vxtmmeko4o7pho6</sha1>
 			<model>wikitext</model>
 			<format>text/x-wiki</format>
 		</revision>
 	</page>
 </mediawiki>
-EOF
-						)
-		); */
+EOF;
+		$xml = preg_replace('~<timestamp>.*?</timestamp>~', '<timestamp>' . wfTimestamp( TS_ISO_8601, wfTimestampNow() )
+			. '</timestamp>', $xml );
+		return  $xml;
+
+}
+
+}
