@@ -53,6 +53,7 @@ $wgAutoloadClasses['PubSubHubbubSubscriber\\PubSubHubbubException'] = $dir . 'sr
 $wgAutoloadClasses['PubSubHubbubSubscriber\\Subscription'] = $dir . 'src/Subscription.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriptionHandler'] = $dir . 'src/SubscriptionHandler.php';
 $wgAutoloadClasses['PubSubHubbubSubscriber\\SubscriberClient'] = $dir . 'src/SubscriberClient.php';
+$wgAutoloadClasses['PubSubHubbubSubscriber\\ImportCallbacks'] = $dir . 'src/ImportCallbacks.php';
 
 $wgAPIModules['pushcallback'] = 'PubSubHubbubSubscriber\\ApiSubscription';
 
