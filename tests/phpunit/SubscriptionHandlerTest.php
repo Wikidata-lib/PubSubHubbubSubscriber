@@ -43,26 +43,54 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	}
 
 	/**
-	 *
+	 * @dataProvider getXMLPushRedirectDataSuccessful
+	 * @param string $xml The XML dump to import.
 	 */
-	public function testHandlePushRedirect() {
-		$this->addData();
-		sleep( 1 );
-		$xml = $this->getXMLPushRedirectData();
-
-		$file = 'data:application/xml,' . $xml;
-		$this->mHandler->handlePush( $file );
-
-		$orginalTitle = Title::newFromText( 'TestPage' );
-		$orginalPage = WikiPage::factory( $orginalTitle );
-
+	public function testHandlePushRedirectSuccessful( $xml ) {
+		$originalPage = $this->redirectSetup( $xml );
 		$redirectTitle = Title::newFromText( 'Redirect TestPage' );
 		$redirectPage = WikiPage::factory( $redirectTitle );
 
 		$this->assertTrue( $redirectPage->exists() );
 
-		$text = $orginalPage->getContent()->getNativeData();
-		$this->assertEquals( "This is a Test Page.", $text );
+		$text = $redirectPage->getContent()->getNativeData();
+		$this->assertEquals( "TestPage content", $text );
+
+		$text =$originalPage->getContent()->getNativeData();
+		$this->assertEquals( "#REDIRECT [[Redirect TestPage]]", $text );
+	}
+
+	/**
+	 * @dataProvider getXMLPushRedirectDataExists
+	 * @param string $xml The XML dump to import.
+	 */
+	public function testHandlePushRedirectExists( $xml ) {
+		$originalPage = $this->redirectSetup( $xml );
+		$redirectTitle = Title::newFromText( 'Test Page' );
+		$redirectPage = WikiPage::factory( $redirectTitle );
+
+		$text = $redirectPage->getContent()->getNativeData();
+		$this->assertEquals( "Test Page content", $text );
+
+		$text =$originalPage->getContent()->getNativeData();
+		$this->assertEquals( "TestPage content version 2", $text );
+	}
+
+	/**
+	 * @param $xml
+	 * @return WikiPage
+	 */
+	public function redirectSetup( $xml ) {
+		$this->addData();
+		sleep( 1 );
+		$xml = preg_replace('~<timestamp>.*?</timestamp>~', '<timestamp>' . wfTimestamp( TS_ISO_8601, wfTimestampNow() )
+			. '</timestamp>', $xml );
+
+		$file = 'data:application/xml,' . $xml;
+		$this->mHandler->handlePush( $file );
+
+		$originalTitle = Title::newFromText( 'TestPage' );
+		return WikiPage::factory( $originalTitle );
 	}
 
 	/**
@@ -169,6 +197,7 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 	public function addData() {
 		$this->insertUser( 'TestUser' );
 		$this->insertWikipage( 'TestPage', 'TestPage content', 'TestPage comment' );
+		$this->insertWikipage( 'Test Page', 'Test Page content', 'Test Page comment' );
 	}
 
 	/**
@@ -259,6 +288,8 @@ class SubscriptionHandlerTest extends MediaWikiLangTestCase {
 		return $revision;
 	}
 
+
+
 	public function getXMLPushData() {
 		return array(
 			array(
@@ -309,10 +340,11 @@ EOF
 EOF
 			)
 		);
-}
+	}
 
-	public function getXMLPushRedirectData() {
-		$xml = <<< EOF
+	public function getXMLPushRedirectDataSuccessful() {
+		return array(
+			array( <<< EOF
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
 	<page>
 		<title>TestPage</title>
@@ -333,11 +365,37 @@ EOF
 		</revision>
 	</page>
 </mediawiki>
-EOF;
-		$xml = preg_replace('~<timestamp>.*?</timestamp>~', '<timestamp>' . wfTimestamp( TS_ISO_8601, wfTimestampNow() )
-			. '</timestamp>', $xml );
-		return  $xml;
+EOF
+			)
+		);
+	}
 
-}
+	public function getXMLPushRedirectDataExists() {
+		return array(
+			array( <<< EOF
+<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.8/ http://www.mediawiki.org/xml/export-0.8.xsd" version="0.8" xml:lang="en">
+	<page>
+		<title>TestPage</title>
+		<ns>0</ns>
+		<id>5</id>
+		<redirect title="Test Page"/>
+		<revision>
+			<id>100</id>
+			<parentid>99</parentid>
+			<timestamp></timestamp>
+			<contributor>
+				<ip>127.0.0.1</ip>
+			</contributor>
+			<text xml:space="preserve" bytes="31">TestPage content version 2</text>
+			<sha1>lg0sq0pjm7cngi77vxtmmeko4o7pho6</sha1>
+			<model>wikitext</model>
+			<format>text/x-wiki</format>
+		</revision>
+	</page>
+</mediawiki>
+EOF
+			)
+		);
+	}
 
 }
