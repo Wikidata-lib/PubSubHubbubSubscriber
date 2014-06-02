@@ -16,7 +16,7 @@ class ImportCallbacks {
 	 * @codeCoverageIgnore
 	 * @param callable $previousPageOutCallback
 	 */
-	public function setPreviousPageOutCallback( callable $previousPageOutCallback ) {
+	public function setPreviousPageOutCallback( $previousPageOutCallback ) {
 		$this->previousPageOutCallback = $previousPageOutCallback;
 	}
 

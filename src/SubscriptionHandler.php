@@ -3,12 +3,8 @@
 namespace PubSubHubbubSubscriber;
 
 use ImportStreamSource;
-use Title;
-use User;
 use MWTimestamp;
 use WikiImporter;
-use WikiPage;
-use WikiRevision;
 
 class SubscriptionHandler {
 
