@@ -46,11 +46,13 @@ class ImportCallbacks {
 	 * @param $revCount
 	 * @param $sucCount
 	 * @param $pageInfo
+	 * @return bool
 	 */
-	private function callOriginalPageOutCallback( Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
+	function callOriginalPageOutCallback( Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
 		if ( is_callable( $this->previousPageOutCallback) ) {
 			call_user_func_array( $this->previousPageOutCallback, func_get_args() );
 		}
+		return true;
 	}
 
 	/**
@@ -86,5 +88,4 @@ class ImportCallbacks {
 
 		$this->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount, $pageInfo );
 	}
-
-} 
+}

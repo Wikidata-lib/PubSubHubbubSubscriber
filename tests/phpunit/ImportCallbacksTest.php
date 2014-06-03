@@ -133,6 +133,42 @@ class ImportCallbacksTest extends MediaWikiLangTestCase {
 		$this->assertEquals( "#REDIRECT [[Redirect TestPage]]", $text );
 	}
 
+	/**
+	 *  @dataProvider getRedirectSuccessful
+	 *
+	 * @param Title $title
+	 * @param $origTitle
+	 * @param $revCount
+	 * @param $sucCount
+	 * @param $pageInfo
+	 */
+	public function testCallOriginalPageOutCallbackNull(  Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
+		$success = $this->mImportCallbacks->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount,
+			$pageInfo );
+		$this->assertTrue( $success );
+	}
+
+	/**
+	 *  @dataProvider getRedirectSuccessful
+	 *
+	 * @param Title $title
+	 * @param $origTitle
+	 * @param $revCount
+	 * @param $sucCount
+	 * @param $pageInfo
+	 */
+	public function testCallOriginalPageOutCallback(  Title $title, $origTitle, $revCount, $sucCount, $pageInfo ) {
+		$mock = $this->getMock( 'OriginalCallbackClass', array( 'callback' ) );
+		$mock->expects( $this->once() )
+			->method( 'callback' );
+		$previousPageOutCallback = array( &$mock, 'callback' );
+		$this->mImportCallbacks->setPreviousPageOutCallback( $previousPageOutCallback );
+		$success = $this->mImportCallbacks->callOriginalPageOutCallback( $title, $origTitle, $revCount, $sucCount,
+			$pageInfo );
+		$this->assertTrue( $success );
+
+	}
+
 	public function addDBData() {
 		$this->insertUser( 'TestUser' );
 		$this->insertWikipage( 'TestPage', 'TestPage content', 'TestPage comment' );
