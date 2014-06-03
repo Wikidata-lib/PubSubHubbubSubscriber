@@ -14,7 +14,7 @@ use WikiRevision;
 use WikitextContent;
 
 /**
- * @covers PubSubHubbub\ImportCallbacks
+ * @covers PubSubHubbubSubscriber\ImportCallbacks
  *
  * @group Database
  * @group PubSubHubbubSubscriber
