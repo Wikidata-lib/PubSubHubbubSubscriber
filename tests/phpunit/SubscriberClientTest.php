@@ -32,8 +32,6 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	protected function setUp() {
 		parent::setUp();
 		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
 			'wgServer' => "http://this.is.a.test.wiki",
 			'wgScriptPath' => "/w",
 			'wgScriptExtension' => ".php",
@@ -139,8 +137,9 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
+	 * @param string $secret Not used here.
 	 */
-	public function testCreateCallbackURL( $mode, $hub, $resourceURL, $callbackURL ) {
+	public function testCreateCallbackURL( $mode, $hub, $resourceURL, $callbackURL, $secret ) {
 		$this->assertEquals( $callbackURL, SubscriberClient::createCallbackURL( $resourceURL ));
 	}
 
@@ -151,12 +150,18 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	 * @param string $hub Not used here.
 	 * @param string $resourceURL
 	 * @param string $callbackURL
+	 * @param string $secret
 	 */
-	public function testCreatePostData( $mode, $hub, $resourceURL, $callbackURL ) {
-		$postData = $this->mClient->createPostData( $mode, $resourceURL, $callbackURL );
+	public function testCreatePostData( $mode, $hub, $resourceURL, $callbackURL, $secret ) {
+		$postData = $this->mClient->createPostData( $mode, $resourceURL, $callbackURL, $secret );
 		$this->assertEquals( $mode, $postData['hub.mode'] );
 		$this->assertEquals( $resourceURL, $postData['hub.topic'] );
 		$this->assertEquals( $callbackURL, $postData['hub.callback'] );
+		if ( $secret ) {
+			$this->assertEquals( bin2hex( $secret ), $postData['hub.secret'] );
+		} else {
+			$this->assertArrayNotHasKey( 'hub.secret', $postData );
+		}
 	}
 
 	/**
@@ -166,8 +171,9 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 	 * @param string $hub
 	 * @param string $resourceURL Not used here.
 	 * @param string $callbackURL Not used here.
+	 * @param string $secret Not used here.
 	 */
-	public function testSendRequest( $mode, $hub, $resourceURL, $callbackURL ) {
+	public function testSendRequest( $mode, $hub, $resourceURL, $callbackURL, $secret ) {
 		$this->mClient->sendRequest( $mode, $hub, array() );
 		$this->assertEquals( 'POST', $this->mRequest->mMethod );
 		$this->assertEquals( $hub, $this->mRequest->mHubURL );
@@ -189,7 +195,7 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 		$resourceURL = "http://random.resource/actual.link";
 
 		// Create Subscription.
-		$subscription = new Subscription( NULL, $resourceURL, NULL, true, false );
+		$subscription = new Subscription( NULL, $resourceURL, 'secret', NULL, true, false );
 		$subscription->update();
 
 		// Unsubscribe it.
@@ -248,13 +254,15 @@ class SubscriberClientTest extends MediaWikiLangTestCase {
 				'subscribe',
 				'http://a.hub/',
 				'http://resource/',
-				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F'
+				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fresource%2F',
+				'ThisSecretMustHaveExactly32Bytes'
 			),
 			array(
 				'unsubscribe',
 				'http://a.different.hub/',
 				'http://another.resource/',
-				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F'
+				'http://this.is.a.test.wiki/w/api.php?action=pushcallback&hub.mode=push&hub.topic=http%3A%2F%2Fanother.resource%2F',
+				NULL
 			),
 		);
 	}

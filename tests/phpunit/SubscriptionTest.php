@@ -19,18 +19,14 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 
 	protected function setUp() {
 		parent::setUp();
-		$this->setMwGlobals( array(
-			'wgContLang' => Language::factory( 'en' ),
-			'wgLanguageCode' => 'en',
-		) );
 		$this->tablesUsed[] = 'push_subscriptions';
 
-		$this->insertTestData( NULL, 'topic1', NULL, true, true );
-		$this->insertTestData( NULL, 'topic2', NULL, false, true );
+		$this->insertTestData( NULL, 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, true, true );
+		$this->insertTestData( NULL, 'topic2', 'ThisOneAlsoHasToHave32Characters', NULL, false, true );
 	}
 
-	public function insertTestData( $id, $topic, $expires, $confirmed, $unsubscribe ) {
-		$subscription = new Subscription( $id, $topic, $expires, $confirmed, $unsubscribe );
+	public function insertTestData( $id, $topic, $secret, $expires, $confirmed, $unsubscribe ) {
+		$subscription = new Subscription( $id, $topic, $secret, $expires, $confirmed, $unsubscribe );
 		$subscription->update();
 	}
 
@@ -45,7 +41,7 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 		$subscription = $reflection->newInstanceArgs( $insertData );
 		$subscription->update();
 		$this->assertSelect( 'push_subscriptions',
-			array( 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ), '',
+			array( 'psb_topic', 'psb_secret', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ), '',
 			$expectedData );
 	}
 
@@ -57,7 +53,7 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 		$subscription->setConfirmed( $confirmed );
 		$subscription->update();
 		$this->assertSelect( 'push_subscriptions',
-			array( 'psb_topic', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ), '',
+			array( 'psb_topic', 'psb_secret', 'psb_expires', 'psb_confirmed', 'psb_unsubscribe' ), '',
 			$expectedData );
 	}
 
@@ -81,7 +77,7 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 	}
 
 	public function testSubscriptionFindByID() {
-		$subscription = new Subscription( NULL, "topic3", NULL, true, false );
+		$subscription = new Subscription( NULL, 'topic3', 'EvenThisSecretNeeds32Characters!', NULL, true, false );
 		$subscription->update();
 
 		$subscription = Subscription::findByTopic( "topic3" );
@@ -102,19 +98,19 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 	public function getInsertSubscriptionData() {
 		return array(
 			array(
-				array( NULL, 'topic3', NULL, true, true ),
+				array( NULL, 'topic3', 'EvenThisSecretNeeds32Characters!', NULL, true, true ),
 				array(
-					array( 'topic1', NULL, '1', '1' ),
-					array( 'topic2', NULL, '0', '1' ),
-					array( 'topic3', NULL, '1', '1' ),
+					array( 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, '1', '1' ),
+					array( 'topic2', 'ThisOneAlsoHasToHave32Characters', NULL, '0', '1' ),
+					array( 'topic3', 'EvenThisSecretNeeds32Characters!', NULL, '1', '1' ),
 				),
 			),
 			array(
-				array( NULL, 'topic4', NULL, false, true ),
+				array( NULL, 'topic4', 'EvenThatSecretNeeds32Characters!', NULL, false, true ),
 				array(
-					array( 'topic1', NULL, '1', '1' ),
-					array( 'topic2', NULL, '0', '1' ),
-					array( 'topic4', NULL, '0', '1' ),
+					array( 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, '1', '1' ),
+					array( 'topic2', 'ThisOneAlsoHasToHave32Characters', NULL, '0', '1' ),
+					array( 'topic4', 'EvenThatSecretNeeds32Characters!', NULL, '0', '1' ),
 				),
 			),
 		);
@@ -126,16 +122,16 @@ class SubscriptionTest extends MediaWikiLangTestCase {
 				"topic1",
 				false,
 				array(
-					array( 'topic1', NULL, '0', '1' ),
-					array( 'topic2', NULL, '0', '1' ),
+					array( 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, '0', '1' ),
+					array( 'topic2', 'ThisOneAlsoHasToHave32Characters', NULL, '0', '1' ),
 				),
 			),
 			array(
 				"topic2",
 				true,
 				array(
-					array( 'topic1', NULL, '1', '1' ),
-					array( 'topic2', NULL, '1', '1' ),
+					array( 'topic1', 'ThisSecretMustHaveExactly32Bytes', NULL, '1', '1' ),
+					array( 'topic2', 'ThisOneAlsoHasToHave32Characters', NULL, '1', '1' ),
 				),
 			),
 		);

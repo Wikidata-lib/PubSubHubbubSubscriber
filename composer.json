@@ -18,7 +18,8 @@
 		"wiki": "https://www.mediawiki.org/wiki/Extension:PubSubHubbubSubscriber"
 	},
 	"require": {
-		"php": ">=5.3.10"
+		"php": ">=5.3.10",
+        "ext-openssl": "*"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "3.7.*",

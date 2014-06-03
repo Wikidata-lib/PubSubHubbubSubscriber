@@ -22,7 +22,8 @@ class ApiSubscription extends ApiBase {
 				} // @codeCoverageIgnore
 				$challenge = "";
 
-				$success = $handler->handlePush();
+				$hmacSignature = $this->getRequest()->getHeader( 'X-Hub-Signature' );
+				$success = $handler->handlePush( $params['hub.topic'], $hmacSignature );
 				break;
 			case 'subscribe':
 				$success = $handler->handleSubscribe( $params['hub.topic'], (int) $params['hub.lease_seconds'] );

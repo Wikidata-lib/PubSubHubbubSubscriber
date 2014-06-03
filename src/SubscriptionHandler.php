@@ -9,20 +9,37 @@ use WikiImporter;
 class SubscriptionHandler {
 
 	/**
+	 * @param string $topic
+	 * @param string $hmacSignature
 	 * @param string $file The file to read the POST data from. Defaults to stdin.
 	 * @return bool whether the pushed data could be accepted.
 	 */
-	public function handlePush( $file = "php://input" ) {
-		// The hub is POSTing new data.
-		$source = ImportStreamSource::newFromFile( $file );
-		if ( $source->isGood() ) {
-			$callbacks = new ImportCallbacks();
-			$importer = new WikiImporter( $source->value );
-			$importer->setLogItemCallback( array( &$callbacks, 'deletionPage' ) );
-			$callbacks->setPreviousPageOutCallback( $importer->setPageOutCallback(
-				array( &$callbacks, 'createRedirect' ) ) );
-			$importer->doImport();
-			return true;
+	public function handlePush( $topic, $hmacSignature, $file = "php://input" ) {
+		$subscription = Subscription::findByTopic( $topic );
+		if ( $subscription && $subscription->isConfirmed() ) {
+			$source = ImportStreamSource::newFromFile( $file );
+			if ( $source->isGood() ) {
+				// Strip 'sha1='.
+				$hmacSignature = substr( trim( $hmacSignature ), 5 );
+
+				$content = file_get_contents( $file );
+				$expectedSignature = hash_hmac( 'sha1', $content, bin2hex( $subscription->getSecret() ), false );
+
+				if ( $expectedSignature !== $hmacSignature ) {
+					wfDebug( '[PubSubHubbubSubscriber] HMAC signature not matching. Ignoring data.' . PHP_EOL );
+					// Still need to return success according to specification.
+					return true;
+				}
+				$callbacks = new ImportCallbacks();
+				$importer = new WikiImporter( $source->value );
+				$importer->setLogItemCallback( array( &$callbacks, 'deletionPage' ) );
+				$callbacks->setPreviousPageOutCallback( $importer->setPageOutCallback(
+					array( &$callbacks, 'createRedirect' ) ) );
+				$importer->doImport();
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
